@@ -7,19 +7,50 @@
  * Architecture :
  * - Function tools → Custom tools Synesia
  * - MCP tools → MCP tools Synesia (passthrough avec adaptation format)
- * - Ajout de tools Synesia spécifiques (callable, knowledge)
+ * - Ajout de tools Synesia spécifiques (callable, knowledge, datasources agent)
  */
 
 import type { Tool, FunctionTool, McpTool } from '../../types/strictTypes';
-import type { 
-  LiminalityTool, 
+import type {
+  LiminalityTool,
   LiminalityCustomTool,
   LiminalityMCPTool,
   LiminalityCallableTool,
-  LiminalityKnowledgeTool
+  LiminalityKnowledgeTool,
+  LiminalitySpreadsheetTool,
+  LiminalityKvStorageTool,
+  LiminalityMemoryTool,
+  LiminalityDatasourceOperationConfig,
 } from '../../types/liminalityTypes';
 import { isMcpTool } from '../../types/strictTypes';
+import type { LlmAgentDatasourceRef } from '../../types';
 import { simpleLogger as logger } from '@/utils/logger';
+
+/** Defaults doc LLM Exec — spreadsheet */
+const DEFAULT_SPREADSHEET_CONFIG: LiminalityDatasourceOperationConfig = {
+  read: { enabled: true },
+  insert: { enabled: true },
+  update: { enabled: true },
+  delete: { enabled: false },
+};
+
+/** Defaults doc LLM Exec — kv_storage */
+const DEFAULT_KV_CONFIG: LiminalityDatasourceOperationConfig = {
+  list: { enabled: true },
+  get: { enabled: true },
+  put: { enabled: true },
+  remove: { enabled: false },
+};
+
+/** Defaults doc LLM Exec — memory */
+const DEFAULT_MEMORY_CONFIG: LiminalityDatasourceOperationConfig = {
+  search: { enabled: true, top_k: 5 },
+  insert: { enabled: true },
+};
+
+function cloneDatasourceConfig(c: LiminalityDatasourceOperationConfig): LiminalityDatasourceOperationConfig {
+  return JSON.parse(JSON.stringify(c)) as LiminalityDatasourceOperationConfig;
+}
 
 /**
  * Configuration pour l'ajout de tools Synesia spécifiques
@@ -31,6 +62,8 @@ export interface SynesiaToolsConfig {
     name: string;
     description: string;
   }>;
+  /** Datasources liées à l’agent (types Synesia → entrées `tools` POST /v1/llm-exec/round). */
+  datasources?: LlmAgentDatasourceRef[];
 }
 
 /**
@@ -195,11 +228,99 @@ export class LiminalityToolsAdapter {
       }
     }
 
+    // Datasources agent (knowledge | spreadsheet | kv_storage | memory)
+    if (synesiaTools.datasources && synesiaTools.datasources.length > 0) {
+      for (const ds of synesiaTools.datasources) {
+        const mapped = this.datasourceRefToLiminalityTool(ds);
+        if (mapped) {
+          enhanced.push(mapped);
+          addedCount++;
+          logger.dev(`[LiminalityToolsAdapter] ➕ Ajouté datasource ${ds.type}: ${ds.name} (${ds.id})`);
+        }
+      }
+    }
+
     if (addedCount > 0) {
       logger.info(`[LiminalityToolsAdapter] ✅ Ajouté ${addedCount} tools Synesia spécifiques`);
     }
 
     return enhanced;
+  }
+
+  private static sanitizeDatasourceToolName(name: string): string {
+    const base = name.replace(/[^a-zA-Z0-9_]/g, '_');
+    return base.length > 0 ? base : 'datasource';
+  }
+
+  /**
+   * Mappe une ligne datasource Synesia vers un tool LLM Exec (doc origins / llm-exec).
+   */
+  static datasourceRefToLiminalityTool(ref: LlmAgentDatasourceRef): LiminalityTool | null {
+    const id = typeof ref.id === 'string' ? ref.id.trim() : '';
+    if (!id) {
+      return null;
+    }
+
+    const typeStr = typeof ref.type === 'string' ? ref.type : '';
+    const rawType = typeStr.trim().toLowerCase();
+    if (!rawType) {
+      logger.warn('[LiminalityToolsAdapter] ⚠️ Datasource sans type ignorée');
+      return null;
+    }
+
+    const nameStr = typeof ref.name === 'string' ? ref.name : '';
+    const safeName = this.sanitizeDatasourceToolName(nameStr);
+    const descSource =
+      typeof ref.description === 'string' && ref.description.trim().length > 0
+        ? ref.description.trim()
+        : nameStr.trim();
+    const description = descSource.length > 0 ? descSource : safeName;
+
+    switch (rawType) {
+      case 'knowledge': {
+        const tool: LiminalityKnowledgeTool = {
+          type: 'knowledge',
+          knowledge_id: id,
+          name: `search_${safeName}`,
+          description,
+          allowed_actions: ['search'],
+        };
+        return tool;
+      }
+      case 'spreadsheet': {
+        const tool: LiminalitySpreadsheetTool = {
+          type: 'spreadsheet',
+          spreadsheet_id: id,
+          name: safeName,
+          description,
+          config: cloneDatasourceConfig(DEFAULT_SPREADSHEET_CONFIG),
+        };
+        return tool;
+      }
+      case 'kv_storage': {
+        const tool: LiminalityKvStorageTool = {
+          type: 'kv_storage',
+          kv_storage_id: id,
+          name: safeName,
+          description,
+          config: cloneDatasourceConfig(DEFAULT_KV_CONFIG),
+        };
+        return tool;
+      }
+      case 'memory': {
+        const tool: LiminalityMemoryTool = {
+          type: 'memory',
+          memory_id: id,
+          name: safeName,
+          description,
+          config: cloneDatasourceConfig(DEFAULT_MEMORY_CONFIG),
+        };
+        return tool;
+      }
+      default:
+        logger.warn(`[LiminalityToolsAdapter] ⚠️ Type datasource non exposé au LLM Exec: ${typeStr}`);
+        return null;
+    }
   }
 
   /**
@@ -220,6 +341,21 @@ export class LiminalityToolsAdapter {
       case 'knowledge': {
         const kt = tool as LiminalityKnowledgeTool;
         return !!(kt.knowledge_id && kt.name && kt.description);
+      }
+
+      case 'spreadsheet': {
+        const st = tool as LiminalitySpreadsheetTool;
+        return !!(st.spreadsheet_id && st.name && st.description && st.config && typeof st.config === 'object');
+      }
+
+      case 'kv_storage': {
+        const kv = tool as LiminalityKvStorageTool;
+        return !!(kv.kv_storage_id && kv.name && kv.description && kv.config && typeof kv.config === 'object');
+      }
+
+      case 'memory': {
+        const mem = tool as LiminalityMemoryTool;
+        return !!(mem.memory_id && mem.name && mem.description && mem.config && typeof mem.config === 'object');
       }
       
       case 'mcp': {

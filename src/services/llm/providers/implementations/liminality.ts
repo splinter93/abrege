@@ -13,12 +13,12 @@
  */
 
 import { BaseProvider, type ProviderConfig, type ProviderInfo } from '../base/BaseProvider';
-import type { LLMProvider, AppContext } from '../../types';
+import type { LLMProvider, AppContext, LlmAgentDatasourceRef } from '../../types';
 import type { ChatMessage } from '@/types/chat';
 import type { LLMResponse, ToolCall, Tool, Usage } from '../../types/strictTypes';
 import { simpleLogger as logger } from '@/utils/logger';
 import { getSystemMessage } from '../../templates';
-import { LiminalityToolsAdapter } from '../adapters/LiminalityToolsAdapter';
+import { LiminalityToolsAdapter, type SynesiaToolsConfig } from '../adapters/LiminalityToolsAdapter';
 import type { 
   LiminalityTool, 
   LiminalityLLMConfig, 
@@ -335,7 +335,12 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
   /**
    * Effectue un appel à l'API Liminality avec une liste de messages déjà préparée
    */
-  async callWithMessages(messages: ChatMessage[], tools: Tool[], synesiaCallables?: string[]): Promise<LLMResponse> {
+  async callWithMessages(
+    messages: ChatMessage[],
+    tools: Tool[],
+    synesiaCallables?: string[],
+    synesiaAgentDatasources?: LlmAgentDatasourceRef[]
+  ): Promise<LLMResponse> {
     if (!this.isAvailable()) {
       throw new Error('Liminality provider non configuré');
     }
@@ -350,12 +355,18 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
       // Conversion des tools via l'adapter
       let liminalityTools = LiminalityToolsAdapter.convert(tools);
 
-      // Ajouter les callables Synesia si fournis
+      const synesiaParts: SynesiaToolsConfig = {};
       if (synesiaCallables && synesiaCallables.length > 0) {
-        liminalityTools = LiminalityToolsAdapter.addSynesiaTools(liminalityTools, {
-          callables: synesiaCallables,
-        });
-        logger.info(`[LiminalityProvider] 🔗 ${synesiaCallables.length} callables ajoutés aux tools`);
+        synesiaParts.callables = synesiaCallables;
+      }
+      if (synesiaAgentDatasources && synesiaAgentDatasources.length > 0) {
+        synesiaParts.datasources = synesiaAgentDatasources;
+      }
+      if (Object.keys(synesiaParts).length > 0) {
+        liminalityTools = LiminalityToolsAdapter.addSynesiaTools(liminalityTools, synesiaParts);
+        logger.info(
+          `[LiminalityProvider] 🔗 Synesia tools — callables: ${synesiaCallables?.length ?? 0}, datasources: ${synesiaAgentDatasources?.length ?? 0}`
+        );
       }
 
       // Préparer le payload (images via metadata.imageInputs, jamais dans content)
@@ -392,7 +403,8 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
   async *callWithMessagesStream(
     messages: ChatMessage[], 
     tools: Tool[],
-    synesiaCallables?: string[]
+    synesiaCallables?: string[],
+    synesiaAgentDatasources?: LlmAgentDatasourceRef[]
   ): AsyncGenerator<LiminalityStreamChunk, void, unknown> {
     if (!this.isAvailable()) {
       throw new Error('Liminality provider non configuré');
@@ -408,12 +420,18 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
       // Conversion des tools via l'adapter
       let liminalityTools = LiminalityToolsAdapter.convert(tools);
 
-      // Ajouter les callables Synesia si fournis
+      const synesiaPartsStream: SynesiaToolsConfig = {};
       if (synesiaCallables && synesiaCallables.length > 0) {
-        liminalityTools = LiminalityToolsAdapter.addSynesiaTools(liminalityTools, {
-          callables: synesiaCallables,
-        });
-        logger.info(`[LiminalityProvider] 🔗 ${synesiaCallables.length} callables ajoutés aux tools`);
+        synesiaPartsStream.callables = synesiaCallables;
+      }
+      if (synesiaAgentDatasources && synesiaAgentDatasources.length > 0) {
+        synesiaPartsStream.datasources = synesiaAgentDatasources;
+      }
+      if (Object.keys(synesiaPartsStream).length > 0) {
+        liminalityTools = LiminalityToolsAdapter.addSynesiaTools(liminalityTools, synesiaPartsStream);
+        logger.info(
+          `[LiminalityProvider] 🔗 Synesia tools (stream) — callables: ${synesiaCallables?.length ?? 0}, datasources: ${synesiaAgentDatasources?.length ?? 0}`
+        );
       }
 
       // Préparer le payload (images via metadata.imageInputs)

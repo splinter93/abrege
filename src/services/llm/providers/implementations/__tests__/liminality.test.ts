@@ -119,6 +119,51 @@ describe('LiminalityProvider', () => {
       expect(converted[1].type).toBe('knowledge');
     });
 
+    test('should map agent datasources to LLM Exec tool shapes (knowledge, spreadsheet, kv_storage, memory)', () => {
+      const converted = LiminalityToolsAdapter.addSynesiaTools([], {
+        datasources: [
+          { id: 'a1', type: 'knowledge', name: 'Docs', description: 'KB' },
+          { id: 'b1', type: 'spreadsheet', name: 'Budget', description: 'Sheet' },
+          { id: 'c1', type: 'kv_storage', name: 'cache', description: 'KV' },
+          { id: 'd1', type: 'memory', name: 'long mem', description: 'Memory' },
+        ],
+      });
+
+      expect(converted).toHaveLength(4);
+      expect(converted[0]).toMatchObject({ type: 'knowledge', knowledge_id: 'a1', allowed_actions: ['search'] });
+      expect(converted[1]).toMatchObject({ type: 'spreadsheet', spreadsheet_id: 'b1' });
+      expect((converted[1] as { config?: unknown }).config).toBeDefined();
+      expect(converted[2]).toMatchObject({ type: 'kv_storage', kv_storage_id: 'c1' });
+      expect(converted[3]).toMatchObject({ type: 'memory', memory_id: 'd1' });
+    });
+
+    test('should ignore invalid datasource refs without throwing', () => {
+      expect(
+        LiminalityToolsAdapter.datasourceRefToLiminalityTool({
+          id: '',
+          type: 'knowledge',
+          name: 'x',
+          description: null,
+        })
+      ).toBeNull();
+      expect(
+        LiminalityToolsAdapter.datasourceRefToLiminalityTool({
+          id: 'id1',
+          type: '',
+          name: 'x',
+          description: null,
+        })
+      ).toBeNull();
+      const mem = LiminalityToolsAdapter.datasourceRefToLiminalityTool({
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        type: 'memory',
+        name: '',
+        description: null,
+      });
+      expect(mem).not.toBeNull();
+      expect(mem && 'description' in mem && mem.description.length).toBeGreaterThan(0);
+    });
+
     test('should validate tools correctly', () => {
       const validCallable = { type: 'callable' as const, callable_id: 'test-123' };
       const invalidCallable = { type: 'callable' as const, callable_id: '' };

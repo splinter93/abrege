@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { simpleLogger as logger } from '@/utils/logger';
 import type { SynesiaDatasource, SynesiaDatasourceApiItem } from '@/types/datasources';
+import type { LlmAgentDatasourceRef } from '@/services/llm/types';
 import { getLiminalityOriginsApiConfig } from './liminalityOriginsConfig';
 
 const apiItemSchema = z.object({
@@ -205,6 +206,48 @@ export class DatasourceService {
     logger.dev(`[DatasourceService] ${result.length} datasources depuis DB`);
 
     return result;
+  }
+
+  /**
+   * Datasources Synesia liées à un agent (pour POST /v1/llm-exec — tools knowledge / spreadsheet / kv_storage / memory).
+   */
+  async getDatasourcesForAgent(agentId: string): Promise<LlmAgentDatasourceRef[]> {
+    if (!agentId || typeof agentId !== 'string' || agentId.trim() === '') {
+      return [];
+    }
+
+    const { data, error } = await this.supabase
+      .from('agent_datasources')
+      .select(`
+        synesia_datasources (
+          id,
+          type,
+          name,
+          description
+        )
+      `)
+      .eq('agent_id', agentId);
+
+    if (error) {
+      logger.error('[DatasourceService] getDatasourcesForAgent:', error);
+      throw error;
+    }
+
+    const out: LlmAgentDatasourceRef[] = [];
+    for (const row of data ?? []) {
+      const embedded = (row as { synesia_datasources?: unknown }).synesia_datasources;
+      const ds = Array.isArray(embedded) ? embedded[0] : embedded;
+      if (!ds || typeof ds !== 'object') continue;
+      const r = ds as { id?: string; type?: string; name?: string; description?: string | null };
+      if (!r.id || !r.type || !r.name) continue;
+      out.push({
+        id: r.id,
+        type: r.type,
+        name: r.name,
+        description: r.description ?? null,
+      });
+    }
+    return out;
   }
 }
 

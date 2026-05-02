@@ -17,7 +17,7 @@ import type {
   InternalToolErrorChunk
 } from '@/services/llm/types/liminalityTypes';
 import { llmStreamRequestSchema } from '../validation';
-import type { LLMProvider } from '@/services/llm/types';
+import type { LLMProvider, LlmAgentDatasourceRef } from '@/services/llm/types';
 import { dynamicChatRateLimiter } from '@/services/dynamicRateLimiter';
 import {
   validateAndExtractUserId,
@@ -51,6 +51,8 @@ const supabase = createClient(
 interface StreamToolsContext {
   tools: Tool[];
   synesiaCallables?: string[];
+  /** Datasources Synesia liées à l’agent → tools LLM Exec (Liminality uniquement). */
+  synesiaAgentDatasources?: LlmAgentDatasourceRef[];
   callableMapping?: Map<string, string>;
 }
 
@@ -553,6 +555,7 @@ export async function POST(request: NextRequest) {
     let tools: Tool[] = [];
     const toolsMeta: {
       synesiaCallables?: string[];
+      synesiaAgentDatasources?: LlmAgentDatasourceRef[];
       callableMapping?: Map<string, string>;
     } = {};
     let openApiEndpoints = new Map<string, OpenApiEndpoint>();
@@ -635,6 +638,27 @@ export async function POST(request: NextRequest) {
               
               logger.info(LogCategory.API, `[Stream Route] ✅ ${callableTools.length} callables convertis en tools pour provider ${providerType}`);
             }
+          }
+        }
+
+        // ✅ Datasources Synesia liées à l’agent → tools LLM Exec (Liminality uniquement)
+        // Isoler les erreurs : un échec DB ne doit pas annuler OpenAPI/MCP/callables.
+        if (providerType === 'liminality') {
+          try {
+            const { datasourceService } = await import('@/services/llm/datasourceService');
+            const agentDs = await datasourceService.getDatasourcesForAgent(context.agentId);
+            if (agentDs.length > 0) {
+              toolsMeta.synesiaAgentDatasources = agentDs;
+              logger.info(LogCategory.API, `[Stream Route] 📎 Datasources agent pour LLM Exec`, {
+                count: agentDs.length,
+                types: [...new Set(agentDs.map((d) => d.type))],
+              });
+            }
+          } catch (dsErr) {
+            logger.warn(LogCategory.API, '[Stream Route] ⚠️ Datasources agent non chargées (continuation sans)', {
+              agentId: context.agentId,
+              error: dsErr instanceof Error ? dsErr.message : String(dsErr),
+            });
           }
         }
         
@@ -730,6 +754,9 @@ export async function POST(request: NextRequest) {
       tools,
       ...(toolsMeta.synesiaCallables !== undefined
         ? { synesiaCallables: toolsMeta.synesiaCallables }
+        : {}),
+      ...(toolsMeta.synesiaAgentDatasources !== undefined
+        ? { synesiaAgentDatasources: toolsMeta.synesiaAgentDatasources }
         : {}),
       ...(toolsMeta.callableMapping !== undefined
         ? { callableMapping: toolsMeta.callableMapping }
@@ -887,7 +914,8 @@ export async function POST(request: NextRequest) {
               const streamCall = provider.callWithMessagesStream(
                 currentMessages,
                 roundTools,
-                providerType === 'liminality' ? toolsCtx.synesiaCallables : undefined
+                providerType === 'liminality' ? toolsCtx.synesiaCallables : undefined,
+                providerType === 'liminality' ? toolsCtx.synesiaAgentDatasources : undefined
               );
               
               for await (const chunk of streamCall) {
@@ -1702,7 +1730,8 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                 const finalResponse = await provider.callWithMessages(
                   currentMessages,
                   [],
-                  undefined
+                  providerType === 'liminality' ? toolsCtx.synesiaCallables : undefined,
+                  providerType === 'liminality' ? toolsCtx.synesiaAgentDatasources : undefined
                 );
 
                 // Type guard pour finalResponse

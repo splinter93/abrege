@@ -292,7 +292,12 @@ export class CerebrasProvider extends BaseProvider implements LLMProvider {
   /**
    * Effectue un appel à l'API Cerebras avec une liste de messages déjà préparée
    */
-  async callWithMessages(messages: ChatMessage[], tools: Tool[]): Promise<LLMResponse> {
+  async callWithMessages(
+    messages: ChatMessage[],
+    tools: Tool[],
+    _synesiaCallables?: string[],
+    _synesiaAgentDatasources?: import('../../types').LlmAgentDatasourceRef[]
+  ): Promise<LLMResponse> {
     if (!this.isAvailable()) {
       throw new Error('Cerebras provider non configuré');
     }
@@ -335,7 +340,9 @@ export class CerebrasProvider extends BaseProvider implements LLMProvider {
    */
   async *callWithMessagesStream(
     messages: ChatMessage[], 
-    tools: Tool[]
+    tools: Tool[],
+    _synesiaCallables?: string[],
+    _synesiaAgentDatasources?: import('../../types').LlmAgentDatasourceRef[]
   ): AsyncGenerator<StreamChunk, void, unknown> {
     if (!this.isAvailable()) {
       throw new Error('Cerebras provider non configuré');

@@ -297,7 +297,9 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
    */
   async callWithMessages(
     messages: ChatMessage[], 
-    tools: Tool[]
+    tools: Tool[],
+    _synesiaCallables?: string[],
+    _synesiaAgentDatasources?: import('../../types').LlmAgentDatasourceRef[]
   ): Promise<LLMResponse> {
     if (!this.isAvailable()) {
       throw new Error('xAI provider non configuré');
@@ -339,7 +341,9 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
    */
   async *callWithMessagesStream(
     messages: ChatMessage[], 
-    tools: Tool[]
+    tools: Tool[],
+    _synesiaCallables?: string[],
+    _synesiaAgentDatasources?: import('../../types').LlmAgentDatasourceRef[]
   ): AsyncGenerator<StreamChunk, void, unknown> {
     if (!this.isAvailable()) {
       throw new Error('xAI provider non configuré');

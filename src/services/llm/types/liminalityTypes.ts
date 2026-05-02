@@ -11,6 +11,9 @@
 export type LiminalityToolType = 
   | 'callable'    // Agent Synesia existant
   | 'knowledge'   // Base de connaissances vectorielle
+  | 'spreadsheet' // Feuille / table (LLM Exec)
+  | 'kv_storage'  // Stockage clé-valeur
+  | 'memory'      // Mémoire agent
   | 'openapi'     // API REST via OpenAPI schema
   | 'mcp'         // Model Context Protocol server
   | 'custom'      // Tool personnalisé avec fonction
@@ -36,6 +39,45 @@ export interface LiminalityKnowledgeTool {
   name: string;
   description: string;
   allowed_actions: ['search'];
+}
+
+/** Config spreadsheet / kv_storage / memory : conforme doc LLM Exec (enabled par opération). */
+export type LiminalityDatasourceOperationConfig = Record<
+  string,
+  { enabled: boolean; [key: string]: unknown }
+>;
+
+/**
+ * Tool Spreadsheet : lecture / écriture table (Synesia datasource type spreadsheet)
+ */
+export interface LiminalitySpreadsheetTool {
+  type: 'spreadsheet';
+  spreadsheet_id: string;
+  name: string;
+  description: string;
+  config: LiminalityDatasourceOperationConfig;
+}
+
+/**
+ * Tool KV storage
+ */
+export interface LiminalityKvStorageTool {
+  type: 'kv_storage';
+  kv_storage_id: string;
+  name: string;
+  description: string;
+  config: LiminalityDatasourceOperationConfig;
+}
+
+/**
+ * Tool Memory agent (recherche sémantique + insert)
+ */
+export interface LiminalityMemoryTool {
+  type: 'memory';
+  memory_id: string;
+  name: string;
+  description: string;
+  config: LiminalityDatasourceOperationConfig;
 }
 
 /**
@@ -132,6 +174,9 @@ export interface LiminalityImageGenerationTool {
 export type LiminalityTool = 
   | LiminalityCallableTool
   | LiminalityKnowledgeTool
+  | LiminalitySpreadsheetTool
+  | LiminalityKvStorageTool
+  | LiminalityMemoryTool
   | LiminalityOpenAPITool
   | LiminalityMCPTool
   | LiminalityCustomTool

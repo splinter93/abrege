@@ -245,7 +245,9 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
    */
   async callWithMessages(
     messages: ChatMessage[],
-    tools: Tool[] | Array<Tool | McpServerConfig>
+    tools: Tool[] | Array<Tool | McpServerConfig>,
+    _synesiaCallables?: string[],
+    _synesiaAgentDatasources?: import('../../types').LlmAgentDatasourceRef[]
   ): Promise<LLMResponse> {
     if (!this.isAvailable()) {
       throw new Error('xAI Native provider non configuré');
@@ -288,7 +290,9 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
    */
   async *callWithMessagesStream(
     messages: ChatMessage[],
-    tools: Tool[] | Array<Tool | McpServerConfig>
+    tools: Tool[] | Array<Tool | McpServerConfig>,
+    _synesiaCallables?: string[],
+    _synesiaAgentDatasources?: import('../../types').LlmAgentDatasourceRef[]
   ): AsyncGenerator<StreamChunk, void, unknown> {
     if (!this.isAvailable()) {
       throw new Error('xAI Native provider non configuré');

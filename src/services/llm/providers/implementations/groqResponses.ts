@@ -189,7 +189,8 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
   async callWithMessages(
     _messages: ChatMessage[],
     _tools: Tool[],
-    _callables?: string[]
+    _callables?: string[],
+    _agentDatasources?: import('../../types').LlmAgentDatasourceRef[]
   ): Promise<unknown> {
     throw new Error(
       'GroqResponsesProvider ne supporte pas callWithMessages — utiliser call()'
@@ -204,7 +205,8 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
   async *callWithMessagesStream(
     _messages: ChatMessage[],
     _tools: Tool[],
-    _callables?: string[]
+    _callables?: string[],
+    _agentDatasources?: import('../../types').LlmAgentDatasourceRef[]
   ): AsyncGenerator<unknown> {
     throw new Error(
       'GroqResponsesProvider ne supporte pas le streaming — utiliser call()'

@@ -1,14 +1,34 @@
 import type { ChatMessage as CoreChatMessage } from '@/types/chat';
 import type { Tool } from './types/strictTypes';
 
+/**
+ * Datasource Synesia liée à un agent, sérialisable vers les entrées `tools` LLM Exec (Liminality uniquement).
+ */
+export interface LlmAgentDatasourceRef {
+  id: string;
+  type: string;
+  name: string;
+  description: string | null;
+}
+
 export interface LLMProvider {
   name: string;
   id: string;
   call(message: string, context: AppContext, history: ChatMessage[]): Promise<unknown>;
   isAvailable(): boolean;
-  /** Liminality passe `callables` en 3e argument ; les autres providers l'ignorent. */
-  callWithMessages(messages: ChatMessage[], tools: Tool[], callables?: string[]): Promise<unknown>;
-  callWithMessagesStream(messages: ChatMessage[], tools: Tool[], callables?: string[]): AsyncGenerator<unknown>;
+  /** Liminality : 3e = IDs callables Synesia, 4e = datasources agent ; les autres providers ignorent ces arguments. */
+  callWithMessages(
+    messages: ChatMessage[],
+    tools: Tool[],
+    callables?: string[],
+    agentDatasources?: LlmAgentDatasourceRef[]
+  ): Promise<unknown>;
+  callWithMessagesStream(
+    messages: ChatMessage[],
+    tools: Tool[],
+    callables?: string[],
+    agentDatasources?: LlmAgentDatasourceRef[]
+  ): AsyncGenerator<unknown>;
 }
 
 export interface AppContext {

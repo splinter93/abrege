@@ -229,7 +229,12 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    * ✅ OPTIMISATION: Les messages sont déjà formatés par GroqHistoryBuilder
    * ✅ MIGRATION MCP: Utilise l'API Responses pour les tools MCP
    */
-  async callWithMessages(messages: ChatMessage[], tools: Tool[]): Promise<LLMResponse> {
+  async callWithMessages(
+    messages: ChatMessage[],
+    tools: Tool[],
+    _synesiaCallables?: string[],
+    _synesiaAgentDatasources?: import('../../types').LlmAgentDatasourceRef[]
+  ): Promise<LLMResponse> {
     if (!this.isAvailable()) {
       throw new Error('Groq provider non configuré');
     }
@@ -285,7 +290,9 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    */
   async *callWithMessagesStream(
     messages: ChatMessage[], 
-    tools: Tool[]
+    tools: Tool[],
+    _synesiaCallables?: string[],
+    _synesiaAgentDatasources?: import('../../types').LlmAgentDatasourceRef[]
   ): AsyncGenerator<StreamChunk, void, unknown> {
     if (!this.isAvailable()) {
       throw new Error('Groq provider non configuré');
