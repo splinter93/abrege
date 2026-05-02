@@ -67,6 +67,17 @@ export class AgentUpdateService {
         throw new AgentAccessDeniedError();
       }
 
+      // Expander le champ `config` legacy en champs plats si présent (schéma OpenAPI incorrect).
+      // Évite HTTP 500 "colonne introuvable" si un LLM envoie { config: { temperature, top_p, max_tokens } }.
+      if (updateData.config && typeof updateData.config === 'object') {
+        const cfg = updateData.config as Record<string, unknown>;
+        if (cfg.temperature !== undefined) updateData.temperature = cfg.temperature;
+        if (cfg.top_p !== undefined) updateData.top_p = cfg.top_p;
+        if (cfg.max_tokens !== undefined) updateData.max_tokens = cfg.max_tokens;
+        delete updateData.config;
+        logger.warn(`[AgentUpdateService] ⚠️ Champ 'config' expandé en champs plats (schéma LLM obsolète)`);
+      }
+
       // Détecter changement de display_name ou name et régénérer le slug
       const nameChanged = (
         (updateData.display_name && updateData.display_name !== existingAgent.display_name) ||
@@ -145,6 +156,16 @@ export class AgentUpdateService {
       }
       if (ownerId !== requesterUserId) {
         throw new AgentAccessDeniedError();
+      }
+
+      // Expander le champ `config` legacy en champs plats si présent.
+      if (patchData.config && typeof patchData.config === 'object') {
+        const cfg = patchData.config as Record<string, unknown>;
+        if (cfg.temperature !== undefined) patchData.temperature = cfg.temperature;
+        if (cfg.top_p !== undefined) patchData.top_p = cfg.top_p;
+        if (cfg.max_tokens !== undefined) patchData.max_tokens = cfg.max_tokens;
+        delete patchData.config;
+        logger.warn(`[AgentUpdateService] ⚠️ Champ 'config' expandé en champs plats (schéma LLM obsolète)`);
       }
 
       // Validation seulement des champs modifiés

@@ -1733,7 +1733,7 @@
       "put": {
         "operationId": "updateAgent",
         "summary": "Mettre à jour un agent",
-        "description": "Met à jour les propriétés d'un agent spécialisé",
+        "description": "Met à jour les propriétés d'un agent spécialisé. Tous les champs sont optionnels. Utiliser les champs plats `temperature`, `top_p`, `max_tokens` — il n'existe pas de champ `config`.",
         "tags": [
           "Agents Spécialisés"
         ],
@@ -1762,19 +1762,51 @@
                 "properties": {
                   "name": {
                     "type": "string",
-                    "maxLength": 255
+                    "maxLength": 255,
+                    "description": "Nom de l'agent"
+                  },
+                  "display_name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "description": "Nom court affiché"
                   },
                   "description": {
                     "type": "string",
-                    "maxLength": 1000
+                    "maxLength": 1000,
+                    "description": "Description de l'agent"
                   },
                   "is_active": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Activer ou désactiver l'agent"
                   },
-                  "config": {
-                    "type": "object"
+                  "model": {
+                    "type": "string",
+                    "description": "Modèle LLM (ex: llama-3.3-70b-versatile)"
+                  },
+                  "temperature": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 2,
+                    "description": "Température de génération (0.0–2.0)"
+                  },
+                  "top_p": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Top-p nucleus sampling (0.0–1.0)"
+                  },
+                  "max_tokens": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 128000,
+                    "description": "Nombre maximum de tokens en réponse"
+                  },
+                  "system_instructions": {
+                    "type": "string",
+                    "description": "Instructions système personnalisées"
                   }
-                }
+                },
+                "additionalProperties": false
               }
             }
           }
@@ -1807,7 +1839,7 @@
       "patch": {
         "operationId": "patchAgent",
         "summary": "Mise à jour partielle d'un agent",
-        "description": "Met à jour partiellement les propriétés d'un agent",
+        "description": "Met à jour partiellement les propriétés d'un agent. N'envoyer que les champs à modifier. Utiliser les champs plats `temperature`, `top_p`, `max_tokens` — il n'existe pas de champ `config`.",
         "tags": [
           "Agents Spécialisés"
         ],
@@ -1836,19 +1868,51 @@
                 "properties": {
                   "name": {
                     "type": "string",
-                    "maxLength": 255
+                    "maxLength": 255,
+                    "description": "Nom de l'agent"
+                  },
+                  "display_name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "description": "Nom court affiché"
                   },
                   "description": {
                     "type": "string",
-                    "maxLength": 1000
+                    "maxLength": 1000,
+                    "description": "Description de l'agent"
                   },
                   "is_active": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Activer ou désactiver l'agent"
                   },
-                  "config": {
-                    "type": "object"
+                  "model": {
+                    "type": "string",
+                    "description": "Modèle LLM (ex: llama-3.3-70b-versatile)"
+                  },
+                  "temperature": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 2,
+                    "description": "Température de génération (0.0–2.0)"
+                  },
+                  "top_p": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Top-p nucleus sampling (0.0–1.0)"
+                  },
+                  "max_tokens": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 128000,
+                    "description": "Nombre maximum de tokens en réponse"
+                  },
+                  "system_instructions": {
+                    "type": "string",
+                    "description": "Instructions système personnalisées"
                   }
-                }
+                },
+                "additionalProperties": false
               }
             }
           }
