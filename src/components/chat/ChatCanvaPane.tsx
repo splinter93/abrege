@@ -20,6 +20,7 @@ import type { EditorWithMarkdown } from '@/types/editor';
 import { hasMarkdownStorage } from '@/types/editor';
 import Editor from '@/components/editor/Editor';
 import { hashString } from '@/utils/editorHelpers';
+import { prepareStoredMarkdownForEditor } from '@/utils/markdownSanitizer.client';
 import { useRealtime } from '@/hooks/useRealtime';
 import { supabase } from '@/supabaseClient';
 import { useCanvasStreamOps } from '@/hooks/useCanvasStreamOps';
@@ -213,11 +214,22 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
 
     accumulatedContentRef.current += chunk;
 
-    const startPos = insertionStartPosRef.current;
-    const docSize = editorRef.current.state.doc.content.size;
-    const toPos = Math.min(startPos + accumulatedContentRef.current.length, docSize);
-
     try {
+      if (streamModeRef.current === 'full_replace') {
+        // ProseMirror positions != Markdown string length. Replacing by range can leave
+        // trailing characters; full_replace must replace the entire document each time.
+        editorRef.current.chain()
+          .focus('start')
+          .clearContent()
+          .insertContent({ type: 'text', text: accumulatedContentRef.current })
+          .run();
+        return;
+      }
+
+      const startPos = insertionStartPosRef.current;
+      const docSize = editorRef.current.state.doc.content.size;
+      const toPos = Math.min(startPos + accumulatedContentRef.current.length, docSize);
+
       editorRef.current.chain()
         .focus()
         .setTextSelection({ from: startPos, to: toPos })
@@ -246,25 +258,37 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
     }
 
     if (accumulatedContentRef.current && insertionStartPosRef.current !== null) {
-      const startPos = insertionStartPosRef.current;
-      const endPos = startPos + accumulatedContentRef.current.length;
-
       try {
-        editorRef.current.chain()
-          .focus()
-          .setTextSelection({ 
-            from: startPos, 
-            to: Math.min(endPos, editorRef.current.state.doc.content.size) 
-          })
-          .deleteSelection()
-          .focus(startPos)
-          .insertContent(accumulatedContentRef.current)
-          .run();
+        if (streamModeRef.current === 'full_replace') {
+          editorRef.current.commands.setContent(
+            prepareStoredMarkdownForEditor(accumulatedContentRef.current),
+            { emitUpdate: false }
+          );
 
-        logger.info(LogCategory.EDITOR, '[ChatCanvaPane] Markdown converted at stream end', {
-          sessionId: session.id,
-          contentLength: accumulatedContentRef.current.length
-        });
+          logger.info(LogCategory.EDITOR, '[ChatCanvaPane] Markdown full_replace finalized', {
+            sessionId: session.id,
+            contentLength: accumulatedContentRef.current.length
+          });
+        } else {
+          const startPos = insertionStartPosRef.current;
+          const endPos = startPos + accumulatedContentRef.current.length;
+
+          editorRef.current.chain()
+            .focus()
+            .setTextSelection({
+              from: startPos,
+              to: Math.min(endPos, editorRef.current.state.doc.content.size)
+            })
+            .deleteSelection()
+            .focus(startPos)
+            .insertContent(accumulatedContentRef.current)
+            .run();
+
+          logger.info(LogCategory.EDITOR, '[ChatCanvaPane] Markdown converted at stream end', {
+            sessionId: session.id,
+            contentLength: accumulatedContentRef.current.length
+          });
+        }
       } catch (error) {
         logger.error(LogCategory.EDITOR, '[ChatCanvaPane] Failed to convert markdown', error);
       }
