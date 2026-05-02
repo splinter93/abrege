@@ -444,6 +444,21 @@
   position: relative;
 }
 
+/* Mode canevas : menu « Plus » toujours visible (pas de tb-show-when-collapsed) */
+.tb-overflow-wrapper--canvas {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.editor-toolbar--compact {
+  gap: 4px;
+  padding: 4px 8px;
+  flex-wrap: nowrap;
+  justify-content: center;
+  max-width: min(320px, 100%);
+}
+
 .tb-overflow-menu {
   position: absolute;
   top: calc(100% + 8px);

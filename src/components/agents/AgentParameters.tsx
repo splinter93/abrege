@@ -1,10 +1,23 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Plus, X, Bot, Route, FileCode, Cloud, SquareFunction, Wrench, Link as LinkIcon, ChevronDown } from 'lucide-react';
+import {
+  Plus,
+  X,
+  Bot,
+  Route,
+  FileCode,
+  Cloud,
+  SquareFunction,
+  Wrench,
+  Link as LinkIcon,
+  ChevronDown,
+} from 'lucide-react';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 import { ModelSelector } from '@/components/ui/ModelSelector';
 import type { McpServer, AgentMcpServerWithDetails } from '@/types/mcp';
 import type { AgentSchemaLink, OpenApiSchema } from '@/hooks/useOpenApiSchemas';
 import type { AgentCallableLink, CallableListItem } from '@/hooks/useCallables';
+import type { AgentDatasourceLink, DatasourceListItem } from '@/hooks/useDatasources';
+import { DatasourceTypeIcon } from '@/components/agents/DatasourceTypeIcon';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 
 const CALLABLE_TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string }> = {
@@ -133,15 +146,21 @@ interface AgentParametersProps {
   availableCallables?: CallableListItem[];
   agentCallables?: AgentCallableLink[];
   callablesLoading?: boolean;
+  availableDatasources?: DatasourceListItem[];
+  agentDatasources?: AgentDatasourceLink[];
+  datasourcesLoading?: boolean;
   onLinkSchema: (agentId: string, schemaId: string) => Promise<void>;
   onUnlinkSchema: (agentId: string, schemaId: string) => Promise<void>;
   onLinkServer: (agentId: string, serverId: string) => Promise<boolean>;
   onUnlinkServer: (agentId: string, serverId: string) => Promise<boolean>;
   onLinkCallable?: (agentId: string, callableId: string) => Promise<boolean>;
   onUnlinkCallable?: (agentId: string, callableId: string) => Promise<boolean>;
+  onLinkDatasource?: (agentId: string, datasourceId: string) => Promise<boolean>;
+  onUnlinkDatasource?: (agentId: string, datasourceId: string) => Promise<boolean>;
   isSchemaLinked: (schemaId: string) => boolean;
   isServerLinked: (serverId: string) => boolean;
   isCallableLinked?: (callableId: string) => boolean;
+  isDatasourceLinked?: (datasourceId: string) => boolean;
   onUpdateField: <K extends keyof SpecializedAgentConfig>(
     field: K,
     value: SpecializedAgentConfig[K]
@@ -161,25 +180,33 @@ export function AgentParameters({
   availableCallables = [],
   agentCallables = [],
   callablesLoading = false,
+  availableDatasources = [],
+  agentDatasources = [],
+  datasourcesLoading = false,
   onLinkSchema,
   onUnlinkSchema,
   onLinkServer,
   onUnlinkServer,
   onLinkCallable,
   onUnlinkCallable,
+  onLinkDatasource,
+  onUnlinkDatasource,
   isSchemaLinked,
   isServerLinked,
   isCallableLinked = () => false,
+  isDatasourceLinked = () => false,
   onUpdateField,
 }: AgentParametersProps) {
   const [showOpenApiDropdown, setShowOpenApiDropdown] = useState(false);
   const [showMcpDropdown, setShowMcpDropdown] = useState(false);
   const [showCallablesDropdown, setShowCallablesDropdown] = useState(false);
+  const [showDatasourcesDropdown, setShowDatasourcesDropdown] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const openApiRef = useRef<HTMLElement>(null);
   const mcpRef = useRef<HTMLElement>(null);
   const callablesRef = useRef<HTMLElement>(null);
+  const datasourcesRef = useRef<HTMLElement>(null);
 
   const closeAllDropdowns = useCallback((e: MouseEvent) => {
     if (showOpenApiDropdown && openApiRef.current && !openApiRef.current.contains(e.target as Node)) {
@@ -191,13 +218,16 @@ export function AgentParameters({
     if (showCallablesDropdown && callablesRef.current && !callablesRef.current.contains(e.target as Node)) {
       setShowCallablesDropdown(false);
     }
-  }, [showOpenApiDropdown, showMcpDropdown, showCallablesDropdown]);
+    if (showDatasourcesDropdown && datasourcesRef.current && !datasourcesRef.current.contains(e.target as Node)) {
+      setShowDatasourcesDropdown(false);
+    }
+  }, [showOpenApiDropdown, showMcpDropdown, showCallablesDropdown, showDatasourcesDropdown]);
 
   useEffect(() => {
-    if (!showOpenApiDropdown && !showMcpDropdown && !showCallablesDropdown) return;
+    if (!showOpenApiDropdown && !showMcpDropdown && !showCallablesDropdown && !showDatasourcesDropdown) return;
     document.addEventListener('mousedown', closeAllDropdowns);
     return () => document.removeEventListener('mousedown', closeAllDropdowns);
-  }, [closeAllDropdowns, showOpenApiDropdown, showMcpDropdown, showCallablesDropdown]);
+  }, [closeAllDropdowns, showOpenApiDropdown, showMcpDropdown, showCallablesDropdown, showDatasourcesDropdown]);
 
   const isCreating = !selectedAgent && editedAgent !== null;
   const showLlmReasoningSelect = (editedAgent?.model ?? '').startsWith('deepseek/deepseek-v4');
@@ -253,6 +283,16 @@ export function AgentParameters({
     await onUnlinkCallable(selectedAgent.id, callableId);
   };
 
+  const handleLinkDatasource = async (datasourceId: string) => {
+    if (!onLinkDatasource || !selectedAgent) return;
+    const linked = await onLinkDatasource(selectedAgent.id, datasourceId);
+    if (linked) setShowDatasourcesDropdown(false);
+  };
+
+  const handleUnlinkDatasource = async (datasourceId: string) => {
+    if (!onUnlinkDatasource || !selectedAgent) return;
+    await onUnlinkDatasource(selectedAgent.id, datasourceId);
+  };
 
   return (
     <div className="space-y-8">
@@ -513,6 +553,73 @@ export function AgentParameters({
                   <span className="flex items-center gap-2">
                     <CallableTypeIcon type={link.synesia_callable.type} />
                     <span className="truncate">{link.synesia_callable.name}</span>
+                  </span>
+                </ToolItem>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Datasources Synesia */}
+      {onLinkDatasource && onUnlinkDatasource && (
+        <section ref={datasourcesRef} className={boxBase}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-zinc-100">Datasources Synesia</h3>
+            {!isCreating && (
+              <button
+                type="button"
+                onClick={() => setShowDatasourcesDropdown(v => !v)}
+                className="section-block inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-zinc-400 text-xs font-medium hover:bg-[var(--color-bg-content)] hover:text-zinc-200 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Ajouter
+              </button>
+            )}
+          </div>
+          {showDatasourcesDropdown && availableDatasources.length > 0 && (
+            <div className="mb-4 space-y-1">
+              {availableDatasources
+                .filter(ds => !isDatasourceLinked(ds.id))
+                .map(ds => (
+                  <button
+                    key={ds.id}
+                    type="button"
+                    className="section-block w-full text-left px-2.5 py-2 rounded-lg text-zinc-300 text-sm hover:bg-[var(--color-bg-content)] transition-colors flex items-center gap-2"
+                    onClick={() => handleLinkDatasource(ds.id)}
+                  >
+                    <DatasourceTypeIcon type={ds.type} customization={ds.customization} />
+                    <span className="truncate">{ds.name}</span>
+                  </button>
+                ))}
+              {availableDatasources.filter(ds => !isDatasourceLinked(ds.id)).length === 0 && (
+                <p className="text-xs text-zinc-500 px-2.5 py-2">Toutes les datasources disponibles sont déjà liées</p>
+              )}
+            </div>
+          )}
+          {isCreating ? (
+            <p className="text-xs text-zinc-500">Les datasources peuvent être configurées après la création de l&apos;agent.</p>
+          ) : datasourcesLoading ? (
+            <div className="flex items-center gap-1.5 text-zinc-500 text-xs">
+              <span className="inline-block w-3 h-3 rounded-full border-[1.5px] border-zinc-600 border-t-transparent animate-spin" />
+              Chargement…
+            </div>
+          ) : agentDatasources.length === 0 ? (
+            <p className="text-xs text-zinc-500">Aucune datasource liée.</p>
+          ) : (
+            <div className="space-y-2">
+              {agentDatasources.map(link => (
+                <ToolItem
+                  key={link.id}
+                  onRemove={() => handleUnlinkDatasource(link.datasource_id)}
+                  titleRemove="Retirer cette datasource"
+                >
+                  <span className="flex items-center gap-2">
+                    <DatasourceTypeIcon
+                      type={link.synesia_datasource.type}
+                      customization={link.synesia_datasource.customization}
+                    />
+                    <span className="truncate">{link.synesia_datasource.name}</span>
                   </span>
                 </ToolItem>
               ))}

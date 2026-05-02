@@ -34,6 +34,8 @@ interface EditorToolbarProps {
   onFontChange?: (fontName: string, scope?: 'all' | 'headings' | 'body') => void;
   currentFont?: string;
   onTranscriptionComplete?: (text: string) => void;
+  /** canevas : police + menu « Plus » uniquement (évite chevauchement avec le titre) */
+  variant?: 'full' | 'compact';
 }
 
 const EditorToolbar: React.FC<EditorToolbarProps> = ({ 
@@ -42,7 +44,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   onImageClick,
   onFontChange,
   currentFont = 'Manrope',
-  onTranscriptionComplete
+  onTranscriptionComplete,
+  variant = 'full',
 }) => {
   // ✅ DEBUG: Log synchrone pour vérifier si EditorToolbar est rendu
   if (process.env.NODE_ENV === 'development') {
@@ -173,6 +176,79 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
     return null;
   }
 
+  const overflowWrapperClass =
+    variant === 'compact'
+      ? 'tb-overflow-wrapper tb-overflow-wrapper--canvas'
+      : 'tb-overflow-wrapper tb-show-when-collapsed';
+
+  const overflowMoreMenu = (
+    <div className={overflowWrapperClass} ref={moreMenuRef}>
+      <button className="tb-btn" title="Plus d'outils" onClick={() => setShowMoreMenu(!showMoreMenu)}>
+        <FiMoreVertical size={16} />
+      </button>
+      {showMoreMenu && (
+        <div className="tb-overflow-menu">
+          <button className={`tb-overflow-item ${isBold ? 'active' : ''}`} onClick={() => { toggleBold(); }}>
+            <FiBold size={15} /> <span>Gras</span>
+          </button>
+          <button className={`tb-overflow-item ${isItalic ? 'active' : ''}`} onClick={() => { toggleItalic(); }}>
+            <FiItalic size={15} /> <span>Italique</span>
+          </button>
+          <button className={`tb-overflow-item ${isUnderline ? 'active' : ''}`} onClick={() => { toggleUnderline(); }}>
+            <FiUnderline size={15} /> <span>Souligné</span>
+          </button>
+          <div className="tb-overflow-divider" />
+          <button className="tb-overflow-item" onClick={() => { setParagraph(); setShowMoreMenu(false); }}>
+            <FiType size={15} /> <span>Paragraphe</span>
+          </button>
+          <button className={`tb-overflow-item ${isH1 ? 'active' : ''}`} onClick={() => { setHeading(1); setShowMoreMenu(false); }}>
+            <span className="tb-overflow-icon-text">H1</span> <span>Titre 1</span>
+          </button>
+          <button className={`tb-overflow-item ${isH2 ? 'active' : ''}`} onClick={() => { setHeading(2); setShowMoreMenu(false); }}>
+            <span className="tb-overflow-icon-text">H2</span> <span>Titre 2</span>
+          </button>
+          <button className={`tb-overflow-item ${isH3 ? 'active' : ''}`} onClick={() => { setHeading(3); setShowMoreMenu(false); }}>
+            <span className="tb-overflow-icon-text">H3</span> <span>Titre 3</span>
+          </button>
+          <div className="tb-overflow-divider" />
+          <button className={`tb-overflow-item ${isBulletList ? 'active' : ''}`} onClick={() => { toggleBulletList(); setShowMoreMenu(false); }}>
+            <FiList size={15} /> <span>Liste à puces</span>
+          </button>
+          <button className={`tb-overflow-item ${isOrderedList ? 'active' : ''}`} onClick={() => { toggleOrderedList(); setShowMoreMenu(false); }}>
+            <MdFormatListNumbered size={16} /> <span>Liste numérotée</span>
+          </button>
+          <div className="tb-overflow-divider" />
+          <button className={`tb-overflow-item ${isBlockquote ? 'active' : ''}`} onClick={() => { toggleBlockquote(); setShowMoreMenu(false); }}>
+            <BsChatQuote size={15} /> <span>Citation</span>
+          </button>
+          <button className="tb-overflow-item" onClick={() => { handleInsertTable(); setShowMoreMenu(false); }}>
+            <MdGridOn size={16} /> <span>Tableau</span>
+          </button>
+          <button className="tb-overflow-item" onClick={() => { onImageClick?.(); setShowMoreMenu(false); }}>
+            <FiImage size={15} /> <span>Image</span>
+          </button>
+          <button className="tb-overflow-item" onClick={() => { editor?.chain().focus().toggleCodeBlock().run(); setShowMoreMenu(false); }}>
+            <FiCode size={15} /> <span>Code</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  if (variant === 'compact') {
+    return (
+      <div
+        className="editor-toolbar editor-toolbar--compact"
+        data-debug-toolbar-content="visible"
+        data-variant="compact"
+      >
+        <FontSelector currentFont={currentFont} onFontChange={onFontChange} disabled={readonly} />
+        <div className="tb-divider" />
+        {overflowMoreMenu}
+      </div>
+    );
+  }
+
   return (
     <div className="editor-toolbar" data-debug-toolbar-content="visible">
       {/* Undo/Redo — desktop only */}
@@ -255,58 +331,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
       </button>
 
       {/* Overflow "..." — visible when secondary items are collapsed */}
-      <div className="tb-overflow-wrapper tb-show-when-collapsed" ref={moreMenuRef}>
-        <button className="tb-btn" title="Plus d'outils" onClick={() => setShowMoreMenu(!showMoreMenu)}>
-          <FiMoreVertical size={16} />
-        </button>
-        {showMoreMenu && (
-          <div className="tb-overflow-menu">
-            {/* B / I / U — toujours présents dans l'overflow (accessibles sur mobile) */}
-            <button className={`tb-overflow-item ${isBold ? 'active' : ''}`} onClick={() => { toggleBold(); }}>
-              <FiBold size={15} /> <span>Gras</span>
-            </button>
-            <button className={`tb-overflow-item ${isItalic ? 'active' : ''}`} onClick={() => { toggleItalic(); }}>
-              <FiItalic size={15} /> <span>Italique</span>
-            </button>
-            <button className={`tb-overflow-item ${isUnderline ? 'active' : ''}`} onClick={() => { toggleUnderline(); }}>
-              <FiUnderline size={15} /> <span>Souligné</span>
-            </button>
-            <div className="tb-overflow-divider" />
-            <button className="tb-overflow-item" onClick={() => { setParagraph(); setShowMoreMenu(false); }}>
-              <FiType size={15} /> <span>Paragraphe</span>
-            </button>
-            <button className={`tb-overflow-item ${isH1 ? 'active' : ''}`} onClick={() => { setHeading(1); setShowMoreMenu(false); }}>
-              <span className="tb-overflow-icon-text">H1</span> <span>Titre 1</span>
-            </button>
-            <button className={`tb-overflow-item ${isH2 ? 'active' : ''}`} onClick={() => { setHeading(2); setShowMoreMenu(false); }}>
-              <span className="tb-overflow-icon-text">H2</span> <span>Titre 2</span>
-            </button>
-            <button className={`tb-overflow-item ${isH3 ? 'active' : ''}`} onClick={() => { setHeading(3); setShowMoreMenu(false); }}>
-              <span className="tb-overflow-icon-text">H3</span> <span>Titre 3</span>
-            </button>
-            <div className="tb-overflow-divider" />
-            <button className={`tb-overflow-item ${isBulletList ? 'active' : ''}`} onClick={() => { toggleBulletList(); setShowMoreMenu(false); }}>
-              <FiList size={15} /> <span>Liste à puces</span>
-            </button>
-            <button className={`tb-overflow-item ${isOrderedList ? 'active' : ''}`} onClick={() => { toggleOrderedList(); setShowMoreMenu(false); }}>
-              <MdFormatListNumbered size={16} /> <span>Liste numérotée</span>
-            </button>
-            <div className="tb-overflow-divider" />
-            <button className={`tb-overflow-item ${isBlockquote ? 'active' : ''}`} onClick={() => { toggleBlockquote(); setShowMoreMenu(false); }}>
-              <BsChatQuote size={15} /> <span>Citation</span>
-            </button>
-            <button className="tb-overflow-item" onClick={() => { handleInsertTable(); setShowMoreMenu(false); }}>
-              <MdGridOn size={16} /> <span>Tableau</span>
-            </button>
-            <button className="tb-overflow-item" onClick={() => { onImageClick?.(); setShowMoreMenu(false); }}>
-              <FiImage size={15} /> <span>Image</span>
-            </button>
-            <button className="tb-overflow-item" onClick={() => { editor?.chain().focus().toggleCodeBlock().run(); setShowMoreMenu(false); }}>
-              <FiCode size={15} /> <span>Code</span>
-            </button>
-          </div>
-        )}
-      </div>
+      {overflowMoreMenu}
     </div>
   );
 };

@@ -523,6 +523,7 @@ const Editor: React.FC<EditorProps> = ({
               layoutMode={layoutMode}
               showReadonlyVisitorKebab={showReadonlyVisitorKebab}
               kebabMenuVariant={kebabMenuVariant}
+              toolbarContext={toolbarContext}
             />
           )}
           documentHeader={(

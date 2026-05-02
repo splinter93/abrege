@@ -21,6 +21,7 @@ import type { McpServer, AgentMcpServerWithDetails } from '@/types/mcp';
 import { agentsService } from '@/services/agents/agentsService';
 import { mcpService } from '@/services/agents/mcpService';
 import { useCallables } from '@/hooks/useCallables';
+import { useDatasources } from '@/hooks/useDatasources';
 import { simpleLogger } from '@/utils/logger';
 import { supabase } from '@/supabaseClient';
 import { ArrowLeft, Menu, SlidersHorizontal, Trash2, Star, Power, PowerOff } from 'lucide-react';
@@ -75,6 +76,15 @@ function AgentDetailContent() {
     unlinkCallable,
   } = useCallables(selectedAgent?.id);
 
+  const {
+    availableDatasources,
+    agentDatasources,
+    loading: datasourcesLoading,
+    loadAgentDatasources,
+    linkDatasource,
+    unlinkDatasource,
+  } = useDatasources(selectedAgent?.id);
+
   /** Chargement du contenu (première load ou outils) — affiche les spinners dans les panneaux */
   const contentLoading = pageLoading || toolsLoading;
   /** Désactive le bouton Enregistrer pendant save ou chargement */
@@ -115,14 +125,14 @@ function AgentDetailContent() {
         setLinkedOpenApiSchemas(linkedSchemas);
         setAvailableMcpServers(allServers);
         setLinkedMcpServers(linkedServers);
-        await loadAgentCallables(agentId);
+        await Promise.all([loadAgentCallables(agentId), loadAgentDatasources(agentId)]);
       } catch (error) {
         simpleLogger.error('[AgentDetail] Failed to load agent tools', error);
       } finally {
         setToolsLoading(false);
       }
     },
-    [fetchAllOpenApiSchemas, fetchLinkedOpenApiSchemas, loadAgentCallables]
+    [fetchAllOpenApiSchemas, fetchLinkedOpenApiSchemas, loadAgentCallables, loadAgentDatasources]
   );
 
   useEffect(() => {
@@ -265,7 +275,7 @@ function AgentDetailContent() {
         setSelectedAgent(updatedAgent);
         setEditedAgent({ ...updatedAgent });
         setNewAgentDirty(false);
-        /* Pas de loadAgentTools : les outils (OpenAPI, MCP, callables) n'ont pas changé */
+        /* Pas de loadAgentTools : les outils (OpenAPI, MCP, callables, datasources) n'ont pas changé */
       }
     } catch (error) {
       simpleLogger.error('[AgentDetail] Failed to save agent', error);
@@ -478,6 +488,47 @@ function AgentDetailContent() {
   const isCallableLinked = useCallback(
     (callableId: string) => agentCallables.some(l => l.callable_id === callableId),
     [agentCallables]
+  );
+
+  const handleLinkDatasource = useCallback(
+    async (agentId: string, datasourceId: string): Promise<boolean> => {
+      if (!agentId) return false;
+      setToolsLoading(true);
+      try {
+        const success = await linkDatasource(agentId, datasourceId);
+        if (success) await loadAgentDatasources(agentId);
+        return success;
+      } catch (error) {
+        simpleLogger.error('[AgentDetail] Failed to link datasource', error);
+        return false;
+      } finally {
+        setToolsLoading(false);
+      }
+    },
+    [linkDatasource, loadAgentDatasources]
+  );
+
+  const handleUnlinkDatasource = useCallback(
+    async (agentId: string, datasourceId: string): Promise<boolean> => {
+      if (!agentId) return false;
+      setToolsLoading(true);
+      try {
+        const success = await unlinkDatasource(agentId, datasourceId);
+        if (success) await loadAgentDatasources(agentId);
+        return success;
+      } catch (error) {
+        simpleLogger.error('[AgentDetail] Failed to unlink datasource', error);
+        return false;
+      } finally {
+        setToolsLoading(false);
+      }
+    },
+    [unlinkDatasource, loadAgentDatasources]
+  );
+
+  const isDatasourceLinked = useCallback(
+    (datasourceId: string) => agentDatasources.some(l => l.datasource_id === datasourceId),
+    [agentDatasources]
   );
 
   const handleDeleteAgent = useCallback(async () => {
@@ -705,15 +756,21 @@ function AgentDetailContent() {
                   availableCallables={availableCallables}
                   agentCallables={agentCallables}
                   callablesLoading={callablesLoading || toolsLoading}
+                  availableDatasources={availableDatasources}
+                  agentDatasources={agentDatasources}
+                  datasourcesLoading={datasourcesLoading || toolsLoading}
                   onLinkSchema={handleLinkSchema}
                   onUnlinkSchema={handleUnlinkSchema}
                   onLinkServer={handleLinkServer}
                   onUnlinkServer={handleUnlinkServer}
                   onLinkCallable={handleLinkCallable}
                   onUnlinkCallable={handleUnlinkCallable}
+                  onLinkDatasource={handleLinkDatasource}
+                  onUnlinkDatasource={handleUnlinkDatasource}
                   isSchemaLinked={isSchemaLinked}
                   isServerLinked={isServerLinked}
                   isCallableLinked={isCallableLinked}
+                  isDatasourceLinked={isDatasourceLinked}
                   onUpdateField={handleFieldUpdate}
                 />
               </div>

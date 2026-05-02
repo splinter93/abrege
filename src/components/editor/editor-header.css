@@ -366,4 +366,20 @@
   }
 }
 
+/* Canevas chat : barre d’outils réduite (police + ⋮) — évite de passer au-dessus du titre */
+.editor-header.editor-header--canvas-compact .editor-header__brand {
+  z-index: 4;
+}
+
+.editor-header.editor-header--canvas-compact .editor-header__center {
+  flex: 0 1 auto;
+  max-width: min(300px, 42vw);
+  min-width: 0;
+  justify-content: center;
+}
+
+.editor-header.editor-header--canvas-compact .editor-header__actions {
+  z-index: 4;
+}
+
  

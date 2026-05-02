@@ -38,6 +38,8 @@ interface EditorHeaderProps {
   noteTitle?: string;
   /** Libellé Connexion / Log in selon la langue de l’éditeur */
   slashLang?: 'fr' | 'en';
+  /** Toolbar réduite (canevas) : police + menu Plus uniquement */
+  toolbarVariant?: 'full' | 'compact';
 }
 
 const EditorHeader: React.FC<EditorHeaderProps> = ({
@@ -60,6 +62,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   showReadonlyVisitorKebab = false,
   noteTitle,
   slashLang = 'fr',
+  toolbarVariant = 'full',
 }) => {
   const { user, loading: authLoading } = useAuth();
 
@@ -100,7 +103,13 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   }, [showToolbar, previewMode, readonly, noteId]);
 
   return (
-    <div className="editor-header">
+    <div
+      className={
+        toolbarVariant === 'compact'
+          ? 'editor-header editor-header--canvas-compact'
+          : 'editor-header'
+      }
+    >
       <div className="editor-header__row">
       {/* Logo à gauche : plume (dashboard) ou chevrons + agrandir (side-panel) */}
       <div className="editor-header__brand">
@@ -331,6 +340,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
             onFontChange={onFontChange}
             currentFont={currentFont}
             onTranscriptionComplete={onTranscriptionComplete}
+            variant={toolbarVariant}
           />
         </div>
       ) : shouldRenderToolbar && !editor ? (

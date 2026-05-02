@@ -132,6 +132,15 @@
   --color-info: #3b82f6;
 
   /* ========================================
+     SYNESIA — datasources (RGB pour color: rgb(var(--*-color)))
+     Aligné produit : knowledge, memory, kv_storage, spreadsheet
+     ======================================== */
+  --knowledge-color: 232, 67, 147;
+  --memory-color: 178, 73, 184;
+  --kv_storage-color: 218, 165, 80;
+  --spreadsheet-color: 73, 184, 110;
+
+  /* ========================================
      ALIAS LEGACY (compatibilité)
      ======================================== */
   

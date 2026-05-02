@@ -36,6 +36,8 @@ interface EditorHeaderSectionProps {
   /** Affiche le bouton kebab pour un visiteur en lecture seule (page publique) */
   showReadonlyVisitorKebab?: boolean;
   kebabMenuVariant?: 'editor' | 'public';
+  /** `canvas` → toolbar compacte (police + menu Plus) */
+  toolbarContext?: 'editor' | 'canvas';
 }
 
 const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
@@ -57,6 +59,7 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
   layoutMode = 'full',
   showReadonlyVisitorKebab = false,
   kebabMenuVariant = 'editor',
+  toolbarContext = 'editor',
 }) => {
   const handleToolbarTranscription = React.useCallback(
     (text: string) => {
@@ -127,6 +130,7 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
           showReadonlyVisitorKebab={showReadonlyVisitorKebab}
           noteTitle={currentTitle}
           slashLang={editorState.ui.slashLang}
+          toolbarVariant={toolbarContext === 'canvas' ? 'compact' : 'full'}
           kebabMenu={
             /* Toujours monter EditorKebabMenu : la modale Export doit rester au DOM quand kebabOpen passe à false */
             <EditorKebabMenu
