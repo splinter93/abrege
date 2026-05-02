@@ -1301,7 +1301,7 @@
       "post": {
         "operationId": "editNoteSection",
         "summary": "Éditer une note par section (TOC / slug)",
-        "description": "Édition structurée TOC-first : utiliser les slugs exacts retournés par GET /note/{ref}/table-of-contents. Préféré à content:apply pour insert/replace/delete/rename par section. Actions : insert_* ajoute du contenu, replace_content remplace le corps en gardant le heading, clear_content vide explicitement le corps en gardant le heading, delete supprime heading + corps, replace_heading renomme le heading, create_section crée une nouvelle section. Si un canva avec status='open' existe pour cette note, le contenu est streamé ; la note est toujours sauvegardée en DB. Pour create_section : fournir heading_title, heading_level, create_placement (at_start | at_end | after_slug) ; si after_slug, cibler une section existante. IMPORTANT: Ne pas inclure de H1 dans le body ; source_title sert de H1.",
+        "description": "**Workflow obligatoire (agents / LLM) :** avant la moindre édition par section, appeler **GET /note/{ref}/table-of-contents** (operationId **getNoteTOC**) pour obtenir la table des matières et les **slug** officiels. Ne jamais inventer ou déduire un `section_slug` depuis le titre seul — les slugs peuvent être dédupliqués (ex. `foo`, `foo-1`). Ensuite seulement, appeler cet endpoint avec les slugs **exactement** retournés par getNoteTOC (sauf si la TOC complète avec slugs est déjà présente dans le contexte immédiat de la même tâche). Édition structurée TOC-first : préféré à content:apply pour insert/replace/delete/rename par section. Actions : insert_* ajoute du contenu, replace_content remplace le corps en gardant le heading, clear_content vide explicitement le corps en gardant le heading, delete supprime heading + corps, replace_heading renomme le heading, create_section crée une nouvelle section. Si un canva avec status='open' existe pour cette note, le contenu est streamé ; la note est toujours sauvegardée en DB. Pour create_section : fournir heading_title, heading_level, create_placement (at_start | at_end | after_slug) ; si after_slug, cibler une section existante via son slug getNoteTOC. IMPORTANT: Ne pas inclure de H1 dans le body ; source_title sert de H1.",
         "tags": [
           "Notes"
         ],
@@ -1345,7 +1345,7 @@
                   },
                   "section_slug": {
                     "type": "string",
-                    "description": "Slug ou titre exact issu de table-of-contents (obligatoire sauf action=create_section)"
+                    "description": "Slug exact retourné par GET /note/{ref}/table-of-contents (getNoteTOC), pas un titre libre — obligatoire sauf action=create_section"
                   },
                   "content": {
                     "type": "string",
@@ -2864,7 +2864,7 @@
       "get": {
         "operationId": "getNoteTOC",
         "summary": "Table des matières d'une note",
-        "description": "Récupère la table des matières (titres H1–H6) avec level, title, slug, line, start. Les slugs servent à cibler une section : GET /note/{ref}?section=<slug> pour lire une section ; pour l'éditer, préférer POST /note/{ref}/sections:edit (TOC-first, tool editNoteSection) ; POST /note/{ref}/content:apply avec target.heading.heading_id=<slug> reste disponible pour les cas avancés (regex, ancres, etc.).",
+        "description": "Récupère la table des matières (titres H1–H6) avec level, title, slug, line, start. **À appeler systématiquement avant** POST /note/{ref}/sections:edit (tool **editNoteSection**) lorsque les slugs ne sont pas déjà connus : c'est la source de vérité pour les `section_slug` (y compris déduplication). Les slugs servent à cibler une section : GET /note/{ref}?section=<slug> pour lire une section ; pour l'éditer, utiliser sections:edit avec le slug exact retourné ici ; POST /note/{ref}/content:apply avec target.heading.heading_id=<slug> reste disponible pour les cas avancés (regex, ancres, etc.).",
         "tags": [
           "Notes"
         ],

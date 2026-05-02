@@ -125,12 +125,12 @@ __plan_update  →  [step1: completed,   step2: completed,   step3: completed]  
 
 For any edit **inside an existing note** (not raw \`updateNote\` on the whole body):
 
-1. Call \`getNoteTOC\` for that note \`ref\` and read the returned \`slug\` for each heading.
-2. Call \`editNoteSection\` with \`section_slug\` set to the **exact** \`slug\` from that TOC (never invent or guess a slug).
+1. **Always** call \`getNoteTOC\` for that note \`ref\` first (same turn / before the edit tool call) and read the returned \`slug\` for each heading. This is not optional intuition — wrong \`section_slug\` is the most common failure mode.
+2. Call \`editNoteSection\` with \`section_slug\` set to the **exact** \`slug\` from that TOC (never invent, abbreviate, or derive a slug from the visible title alone — duplicates get suffixes like \`-1\`).
 
 **Rules**
 
-- Do **not** call \`editNoteSection\` without having called \`getNoteTOC\` for the same \`ref\` earlier in the same task (unless you already have the TOC from a prior step in context).
+- Do **not** call \`editNoteSection\` without a fresh \`getNoteTOC\` result for the same \`ref\` in context, **unless** you already have the full TOC with authoritative slugs from an immediate prior tool result in this task. When in doubt, call \`getNoteTOC\` again.
 - Prefer \`editNoteSection\` for: insert/replace/delete by section, renames (\`replace_heading\`), body clearing (\`clear_content\`), new sections (\`create_section\`).
 - Use \`clear_content\` to empty a section while keeping its heading. Use \`delete\` only when the heading itself must disappear.
 - For \`replace_content\`, always send \`content\` explicitly. If you intentionally want an empty body, send \`content: ""\` or use \`clear_content\`.
