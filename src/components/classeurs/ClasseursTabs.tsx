@@ -70,6 +70,13 @@ function SortableTab({
     e.dataTransfer.types.includes("application/json") ||
     e.dataTransfer.types.includes("itemId");
 
+  /** Padding + bordure sur le bouton (pas sur le wrapper dnd-kit) : toute la zone visible reste cliquable. */
+  const tabSurfaceClass = `whitespace-nowrap px-3 pb-3 pt-1 text-sm font-medium transition-colors duration-200 border-b-2 -mb-px ${
+    isActive
+      ? "border-white text-white"
+      : "border-transparent text-zinc-500 hover:text-zinc-300 hover:border-zinc-700"
+  } ${isDragOver ? "!border-orange-600 !text-orange-400" : ""}`;
+
   return (
     <div
       ref={setNodeRef}
@@ -92,14 +99,13 @@ function SortableTab({
         e.stopPropagation();
         onDrop?.(e, tab);
       }}
-      className={`relative flex-shrink-0 whitespace-nowrap px-3 pb-3 pt-1 text-sm font-medium transition-colors duration-200 cursor-pointer border-b-2 -mb-px ${
-        isActive
-          ? "border-white text-white"
-          : "border-transparent text-zinc-500 hover:text-zinc-300 hover:border-zinc-700"
-      } ${isDragOver ? "!border-orange-600 !text-orange-400" : ""}`}
+      className="relative inline-block flex-shrink-0"
     >
       {isRenaming && onRenameSubmit && onRenameCancel ? (
-        <div className="tab-rename-wrapper flex items-center gap-1.5 w-full text-left" onClick={(e) => e.stopPropagation()}>
+        <div
+          className={`tab-rename-wrapper flex items-center gap-1.5 w-full min-w-0 text-left ${tabSurfaceClass}`}
+          onClick={(e) => e.stopPropagation()}
+        >
           {tab.emoji && <span className="text-base leading-none flex-shrink-0">{tab.emoji}</span>}
           <RenameInput
             initialValue={tab.name}
@@ -114,7 +120,7 @@ function SortableTab({
           type="button"
           onClick={() => onSelect(tab.id)}
           onContextMenu={(e) => onContextMenu?.(e, tab)}
-          className="flex items-center gap-1.5 w-full text-left"
+          className={`flex min-h-[38px] items-center gap-1.5 text-left cursor-pointer ${tabSurfaceClass}`}
           title={
             tab.kind === "shared" && tab.sharedBy
               ? `Partagé par ${tab.sharedBy}`
