@@ -97,6 +97,11 @@ describe('ModelOverrideService', () => {
       expect(result.model).toBe('openrouter/mimo-v2.5');
       expect(result.reasons).toHaveLength(1);
       expect(result.reasons[0]).toContain('MiMo v2.5');
+      expect(result.params).toEqual({
+        temperature: 0.5,
+        topP: 0.8,
+        maxTokens: 8000,
+      });
     });
 
     it('devrait appliquer ReasoningOverrideRule si reasoningOverride présent', () => {
@@ -133,6 +138,11 @@ describe('ModelOverrideService', () => {
 
       // ImageSupportRule appliquée en premier → switch vers MiMo v2.5
       expect(result.model).toBe('openrouter/mimo-v2.5');
+      expect(result.params).toEqual({
+        temperature: 0.5,
+        topP: 0.8,
+        maxTokens: 8000,
+      });
       // ReasoningOverrideRule ne s'applique pas car provider !== 'xai'
       expect(result.reasons.length).toBeGreaterThan(0);
     });

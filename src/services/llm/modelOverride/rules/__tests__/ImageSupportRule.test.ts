@@ -99,6 +99,7 @@ describe('ImageSupportRule', () => {
       expect(result.originalModel).toBe('openai/gpt-oss-20b');
       expect(result.wasOverridden).toBe(true);
       expect(result.reason).toContain('MiMo v2.5');
+      expect(result.paramsOverride).toEqual({ temperature: 0.5, topP: 0.8 });
     });
   });
 });

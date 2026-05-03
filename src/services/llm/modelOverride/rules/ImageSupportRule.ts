@@ -20,6 +20,10 @@ import { getModelInfo } from '@/constants/groqModels';
  */
 const VISION_FALLBACK_MODEL = 'openrouter/mimo-v2.5';
 
+/** Paramètres déterministes pour la vision sur MiMo (fallback), pour limiter les hallucinations */
+const VISION_FALLBACK_TEMPERATURE = 0.5;
+const VISION_FALLBACK_TOP_P = 0.8;
+
 /**
  * Rule pour le fallback automatique vers un modèle avec vision
  */
@@ -69,8 +73,12 @@ export class ImageSupportRule implements ModelOverrideRule {
     return {
       model: VISION_FALLBACK_MODEL,
       originalModel: context.originalModel,
-      reason: `Modèle ${context.originalModel} ne supporte pas les images → switch vers MiMo v2.5 (OpenRouter)`,
-      wasOverridden: true
+      reason: `Modèle ${context.originalModel} ne supporte pas les images → switch vers MiMo v2.5 (OpenRouter), temp=${VISION_FALLBACK_TEMPERATURE}, top_p=${VISION_FALLBACK_TOP_P}`,
+      wasOverridden: true,
+      paramsOverride: {
+        temperature: VISION_FALLBACK_TEMPERATURE,
+        topP: VISION_FALLBACK_TOP_P,
+      },
     };
   }
 
