@@ -222,27 +222,33 @@ body.chat-theme-light .settings-menu-item.active {
 /* ========================================
    Content Area (Right Side)
    ======================================== */
-
-.settings-content-area {
+/*
+ * Scoper sous .settings-modal-container : main.css importe SettingsPage.css / page-settings.css
+ * qui définissent aussi .settings-content-area (layout page réglages). En prod l’ordre des CSS
+ * peut faire gagner ces règles et casser titre + champs du modal (colonne en flex-column, etc.).
+ */
+.settings-modal-container > .settings-content-area {
   flex: 1;
   overflow-y: auto;
   padding: 32px 40px 32px 40px; /* ✅ Remonté */
+  display: block;
+  min-height: 0;
 }
 
-.settings-content-area::-webkit-scrollbar {
+.settings-modal-container > .settings-content-area::-webkit-scrollbar {
   width: 8px;
 }
 
-.settings-content-area::-webkit-scrollbar-track {
+.settings-modal-container > .settings-content-area::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.settings-content-area::-webkit-scrollbar-thumb {
+.settings-modal-container > .settings-content-area::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 4px;
 }
 
-.settings-content-area::-webkit-scrollbar-thumb:hover {
+.settings-modal-container > .settings-content-area::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.12);
 }
 

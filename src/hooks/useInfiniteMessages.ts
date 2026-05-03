@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
 import { ChatMessage } from '@/types/chat';
 import { supabase } from '@/supabaseClient';
 import { simpleLogger as logger } from '@/utils/logger';
@@ -72,6 +72,20 @@ function getMessageIdentityKeys(message: ChatMessage): string[] {
   return keys;
 }
 
+/** Ordre chronologique stable (aligné sur useChatMessageActions.sortMessagesChronologically). */
+function sortMessagesChronologically(messages: ChatMessage[]): ChatMessage[] {
+  return [...messages].sort((a, b) => {
+    const seqA = typeof a.sequence_number === 'number' ? a.sequence_number : Number.POSITIVE_INFINITY;
+    const seqB = typeof b.sequence_number === 'number' ? b.sequence_number : Number.POSITIVE_INFINITY;
+    if (seqA !== seqB) {
+      return seqA - seqB;
+    }
+    const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+    const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+    return timeA - timeB;
+  });
+}
+
 export function useInfiniteMessages(
   options: UseInfiniteMessagesOptions
 ): UseInfiniteMessagesReturn {
@@ -89,7 +103,16 @@ export function useInfiniteMessages(
   const [error, setError] = useState<string | null>(null);
 
   const isInitializedRef = useRef(false);
-  const loadingRef = useRef(false);
+  /** Chargements initiaux concurrents (plusieurs sessions en vol) — isLoading false seulement quand compteur = 0. */
+  const initialLoadInFlightCountRef = useRef(0);
+  /** Exclusion mutuelle du « load more » et garde-fou pendant le chargement initial. */
+  const loadMoreInFlightRef = useRef(false);
+  /** Session réellement affichée — détecte les réponses fetch obsolètes après changement de conversation. */
+  const activeSessionIdRef = useRef<string | null>(null);
+
+  useLayoutEffect(() => {
+    activeSessionIdRef.current = sessionId;
+  }, [sessionId]);
 
   /**
    * 🎯 Récupérer le token d'authentification
@@ -103,22 +126,27 @@ export function useInfiniteMessages(
    * 📥 Charger les N derniers messages (initial load)
    */
   const loadInitialMessages = useCallback(async () => {
-    if (!sessionId || !enabled || loadingRef.current) {
+    if (!sessionId || !enabled) {
       return;
     }
 
-    try {
-      setIsLoading(true);
-      setError(null);
-      loadingRef.current = true;
+    const targetSessionId = sessionId;
 
+    initialLoadInFlightCountRef.current += 1;
+    setIsLoading(true);
+    setError(null);
+
+    try {
       const token = await getAuthToken();
+      if (activeSessionIdRef.current !== targetSessionId) {
+        return;
+      }
       if (!token) {
         throw new Error('Non authentifié');
       }
 
       const response = await fetch(
-        `/api/chat/sessions/${sessionId}/messages/recent?limit=${initialLimit}`,
+        `/api/chat/sessions/${targetSessionId}/messages/recent?limit=${initialLimit}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -126,11 +154,19 @@ export function useInfiniteMessages(
         }
       );
 
+      if (activeSessionIdRef.current !== targetSessionId) {
+        return;
+      }
+
       if (!response.ok) {
         throw new Error('Erreur chargement messages');
       }
 
       const result = await response.json();
+
+      if (activeSessionIdRef.current !== targetSessionId) {
+        return;
+      }
       
       if (!result.success) {
         throw new Error(result.error || 'Erreur inconnue');
@@ -147,12 +183,17 @@ export function useInfiniteMessages(
       });
 
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(errorMessage);
-      logger.error('[useInfiniteMessages] ❌ Erreur chargement initial:', err);
+      if (activeSessionIdRef.current === targetSessionId) {
+        const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+        setError(errorMessage);
+        logger.error('[useInfiniteMessages] ❌ Erreur chargement initial:', err);
+      }
     } finally {
-      setIsLoading(false);
-      loadingRef.current = false;
+      initialLoadInFlightCountRef.current -= 1;
+      if (initialLoadInFlightCountRef.current <= 0) {
+        initialLoadInFlightCountRef.current = 0;
+        setIsLoading(false);
+      }
     }
   }, [sessionId, initialLimit, enabled, getAuthToken]);
 
@@ -161,26 +202,38 @@ export function useInfiniteMessages(
    * ✅ REFACTOR: Utilise sequence_number au lieu de timestamp
    */
   const loadMoreMessages = useCallback(async () => {
-    if (!sessionId || !enabled || loadingRef.current || !hasMore || messages.length === 0) {
+    if (
+      !sessionId ||
+      !enabled ||
+      loadMoreInFlightRef.current ||
+      initialLoadInFlightCountRef.current > 0 ||
+      !hasMore ||
+      messages.length === 0
+    ) {
       return;
     }
 
+    const targetSessionId = sessionId;
+
     try {
       setIsLoadingMore(true);
-      loadingRef.current = true;
+      loadMoreInFlightRef.current = true;
 
       // ✅ Utiliser sequence_number du message le plus ancien
       const oldestMessage = messages[0];
       const beforeSequence = oldestMessage.sequence_number || 0;
 
       const token = await getAuthToken();
+      if (activeSessionIdRef.current !== targetSessionId) {
+        return;
+      }
       if (!token) {
         throw new Error('Non authentifié');
       }
 
       // ✅ Passer sequence_number au lieu de timestamp
       const response = await fetch(
-        `/api/chat/sessions/${sessionId}/messages/before?before=${beforeSequence}&limit=${loadMoreLimit}`,
+        `/api/chat/sessions/${targetSessionId}/messages/before?before=${beforeSequence}&limit=${loadMoreLimit}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -188,11 +241,19 @@ export function useInfiniteMessages(
         }
       );
 
+      if (activeSessionIdRef.current !== targetSessionId) {
+        return;
+      }
+
       if (!response.ok) {
         throw new Error('Erreur chargement messages');
       }
 
       const result = await response.json();
+
+      if (activeSessionIdRef.current !== targetSessionId) {
+        return;
+      }
       
       if (!result.success) {
         throw new Error(result.error || 'Erreur inconnue');
@@ -218,6 +279,7 @@ export function useInfiniteMessages(
       
       // ✅ Restaurer la position de scroll après le render (évite le jump au début)
       requestAnimationFrame(() => {
+        if (activeSessionIdRef.current !== targetSessionId) return;
         if (container) {
           const scrollHeightAfter = container.scrollHeight;
           const heightDiff = scrollHeightAfter - scrollHeightBefore;
@@ -228,6 +290,7 @@ export function useInfiniteMessages(
       
       // ✅ Retirer le marqueur d'animation après 400ms (durée de l'animation)
       setTimeout(() => {
+        if (activeSessionIdRef.current !== targetSessionId) return;
         setMessages(prev => prev.map(msg => {
           const { _isNewlyLoaded, ...cleanMsg } = msg as ChatMessageWithAnimation;
           return cleanMsg;
@@ -242,12 +305,14 @@ export function useInfiniteMessages(
       });
 
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(errorMessage);
-      logger.error('[useInfiniteMessages] ❌ Erreur chargement plus:', err);
+      if (activeSessionIdRef.current === targetSessionId) {
+        const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+        setError(errorMessage);
+        logger.error('[useInfiniteMessages] ❌ Erreur chargement plus:', err);
+      }
     } finally {
       setIsLoadingMore(false);
-      loadingRef.current = false;
+      loadMoreInFlightRef.current = false;
     }
   }, [sessionId, messages, hasMore, enabled, loadMoreLimit, getAuthToken]);
 
@@ -278,7 +343,7 @@ export function useInfiniteMessages(
       }
 
       if (matchingIndices.length === 0) {
-        return [...prev, message];
+        return sortMessagesChronologically([...prev, message]);
       }
 
       // Remplace à la position du premier match, supprime les doublons éventuels.
@@ -330,7 +395,13 @@ export function useInfiniteMessages(
     setMessages([]);
     setHasMore(false);
     setError(null);
+    setIsLoading(false);
+    setIsLoadingMore(false);
     isInitializedRef.current = false;
+    // Ne pas remettre initialLoadInFlightCountRef à 0 : des fetch encore en vol doivent décrémenter
+    // dans leur `finally` pour éviter un décalage du compteur (valeurs négatives / spinner bloqué).
+    // isLoading sera remis à true par le prochain loadInitialMessages si besoin.
+    loadMoreInFlightRef.current = false;
   }, []);
 
   /**

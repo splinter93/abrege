@@ -1,14 +1,14 @@
 /**
- * Rule : Fallback automatique vers Qwen 3 VL 30B (OpenRouter) si images présentes
+ * Rule : Fallback automatique vers MiMo v2.5 (OpenRouter) si images présentes
  *
  * Logique :
  * - Si provider === 'xai' → pas de switch (xAI a la vision native)
  * - Si hasImages === false → pas de switch
  * - Si modèle actuel a capabilities incluant 'images' → pas de switch (vision native)
  *   (ex. Kimi K2.5 sur Liminality lit les images lui-même, pas de fallback)
- * - Sinon → switch vers Qwen 3 VL 30B (OpenRouter / Liminality)
+ * - Sinon → switch vers MiMo v2.5 (OpenRouter / Liminality)
  *
- * Modèle fallback : openrouter/qwen3-vl-30b-a3b-instruct
+ * Modèle fallback : openrouter/mimo-v2.5
  */
 
 import { simpleLogger as logger } from '@/utils/logger';
@@ -18,7 +18,7 @@ import { getModelInfo } from '@/constants/groqModels';
 /**
  * Modèle fallback pour la vision (OpenRouter via Liminality)
  */
-const VISION_FALLBACK_MODEL = 'openrouter/qwen3-vl-30b-a3b-instruct';
+const VISION_FALLBACK_MODEL = 'openrouter/mimo-v2.5';
 
 /**
  * Rule pour le fallback automatique vers un modèle avec vision
@@ -57,7 +57,7 @@ export class ImageSupportRule implements ModelOverrideRule {
   }
 
   /**
-   * Applique l'override : switch vers Qwen 3 VL 30B (OpenRouter)
+   * Applique l'override : switch vers MiMo v2.5 (OpenRouter)
    */
   apply(context: ModelOverrideContext): ModelOverrideResult {
     logger.info(`[ImageSupportRule] 🖼️ Switch vers modèle avec vision:`, {
@@ -69,7 +69,7 @@ export class ImageSupportRule implements ModelOverrideRule {
     return {
       model: VISION_FALLBACK_MODEL,
       originalModel: context.originalModel,
-      reason: `Modèle ${context.originalModel} ne supporte pas les images → switch vers Qwen 3 VL 30B (OpenRouter)`,
+      reason: `Modèle ${context.originalModel} ne supporte pas les images → switch vers MiMo v2.5 (OpenRouter)`,
       wasOverridden: true
     };
   }
