@@ -105,30 +105,50 @@ function CustomSlider({
   );
 }
 
-/* Tool row: badge line + remove on hover */
+/** Pastille source d’outil (OpenAPI vs MCP). */
+type ToolSourceKind = 'openapi' | 'mcp';
+
+function ToolKindBadge({ kind }: { kind: ToolSourceKind }) {
+  const label = kind === 'openapi' ? 'OPENAPI' : 'MCP';
+  return (
+    <span
+      className="inline-flex shrink-0 items-center justify-end rounded border border-[var(--color-border-secondary)] bg-transparent px-1.5 py-0.5 text-[9px] font-mono font-semibold uppercase tracking-wide text-zinc-400 text-right"
+      aria-hidden
+    >
+      {label}
+    </span>
+  );
+}
+
+/* Tool row: nom + kind à droite + remove on hover */
 function ToolItem({
   children,
   onRemove,
   titleRemove,
+  kind,
 }: {
   children: React.ReactNode;
   onRemove: () => void;
   titleRemove: string;
+  kind?: ToolSourceKind;
 }) {
   return (
-    <div className="section-block group flex items-center justify-between gap-2 p-2.5 rounded-lg hover:border-[var(--color-border-secondary)] transition-colors">
-      <div className="min-w-0 truncate text-sm text-zinc-200">{children}</div>
-      <button
-        type="button"
-        onClick={e => {
-          e.stopPropagation();
-          onRemove();
-        }}
-        className="shrink-0 p-1.5 rounded-md opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
-        title={titleRemove}
-      >
-        <X className="w-4 h-4" />
-      </button>
+    <div className="section-block group flex items-center gap-2 p-2.5 rounded-lg hover:border-[var(--color-border-secondary)] transition-colors">
+      <div className="min-w-0 flex-1 truncate text-sm text-zinc-200">{children}</div>
+      <div className="flex shrink-0 items-center justify-end gap-2">
+        {kind ? <ToolKindBadge kind={kind} /> : null}
+        <button
+          type="button"
+          onClick={e => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          className="shrink-0 p-1.5 rounded-md opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+          title={titleRemove}
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -205,23 +225,18 @@ export function AgentParameters({
   isDatasourceLinked = () => false,
   onUpdateField,
 }: AgentParametersProps) {
-  const [showOpenApiDropdown, setShowOpenApiDropdown] = useState(false);
-  const [showMcpDropdown, setShowMcpDropdown] = useState(false);
+  const [showToolsPicker, setShowToolsPicker] = useState(false);
   const [showCallablesDropdown, setShowCallablesDropdown] = useState(false);
   const [showDatasourcesDropdown, setShowDatasourcesDropdown] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
-  const openApiRef = useRef<HTMLElement>(null);
-  const mcpRef = useRef<HTMLElement>(null);
+  const toolsSectionRef = useRef<HTMLElement>(null);
   const callablesRef = useRef<HTMLElement>(null);
   const datasourcesRef = useRef<HTMLElement>(null);
 
   const closeAllDropdowns = useCallback((e: MouseEvent) => {
-    if (showOpenApiDropdown && openApiRef.current && !openApiRef.current.contains(e.target as Node)) {
-      setShowOpenApiDropdown(false);
-    }
-    if (showMcpDropdown && mcpRef.current && !mcpRef.current.contains(e.target as Node)) {
-      setShowMcpDropdown(false);
+    if (showToolsPicker && toolsSectionRef.current && !toolsSectionRef.current.contains(e.target as Node)) {
+      setShowToolsPicker(false);
     }
     if (showCallablesDropdown && callablesRef.current && !callablesRef.current.contains(e.target as Node)) {
       setShowCallablesDropdown(false);
@@ -229,13 +244,13 @@ export function AgentParameters({
     if (showDatasourcesDropdown && datasourcesRef.current && !datasourcesRef.current.contains(e.target as Node)) {
       setShowDatasourcesDropdown(false);
     }
-  }, [showOpenApiDropdown, showMcpDropdown, showCallablesDropdown, showDatasourcesDropdown]);
+  }, [showToolsPicker, showCallablesDropdown, showDatasourcesDropdown]);
 
   useEffect(() => {
-    if (!showOpenApiDropdown && !showMcpDropdown && !showCallablesDropdown && !showDatasourcesDropdown) return;
+    if (!showToolsPicker && !showCallablesDropdown && !showDatasourcesDropdown) return;
     document.addEventListener('mousedown', closeAllDropdowns);
     return () => document.removeEventListener('mousedown', closeAllDropdowns);
-  }, [closeAllDropdowns, showOpenApiDropdown, showMcpDropdown, showCallablesDropdown, showDatasourcesDropdown]);
+  }, [closeAllDropdowns, showToolsPicker, showCallablesDropdown, showDatasourcesDropdown]);
 
   const isCreating = !selectedAgent && editedAgent !== null;
   const showLlmReasoningSelect = (editedAgent?.model ?? '').startsWith('deepseek/deepseek-v4');
@@ -261,7 +276,7 @@ export function AgentParameters({
   const handleLinkSchema = async (schemaId: string) => {
     if (!selectedAgent) return;
     await onLinkSchema(selectedAgent.id, schemaId);
-    setShowOpenApiDropdown(false);
+    setShowToolsPicker(false);
   };
 
   const handleUnlinkSchema = async (schemaId: string) => {
@@ -272,7 +287,7 @@ export function AgentParameters({
   const handleLinkServer = async (serverId: string) => {
     if (!selectedAgent) return;
     const linked = await onLinkServer(selectedAgent.id, serverId);
-    if (linked) setShowMcpDropdown(false);
+    if (linked) setShowToolsPicker(false);
   };
 
   const handleUnlinkServer = async (serverId: string) => {
@@ -341,41 +356,6 @@ export function AgentParameters({
             value={editedAgent.top_p ?? 1}
             onChange={v => onUpdateField('top_p', v)}
           />
-          {showLlmReasoningSelect && (
-            <div className="pt-2 border-t border-zinc-800/80 space-y-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <label className="text-xs font-medium text-zinc-400" htmlFor="agent-reasoning-effort">
-                  Raisonnement (thinking)
-                </label>
-                <div className="relative shrink-0 min-w-0 max-w-[min(100%,12rem)]">
-                  <select
-                    id="agent-reasoning-effort"
-                    className={`${inputBase} pr-8 appearance-none cursor-pointer`}
-                    value={deepseekReasoningSelectValue(editedAgent.reasoning_effort)}
-                    onChange={e =>
-                      onUpdateField(
-                        'reasoning_effort',
-                        e.target.value as SpecializedAgentConfig['reasoning_effort']
-                      )
-                    }
-                    aria-describedby="agent-reasoning-hint"
-                  >
-                    <option value="high">high (défaut doc)</option>
-                    <option value="max">max</option>
-                    <option value="disabled">désactivé (non-thinking)</option>
-                  </select>
-                  <ChevronDown
-                    className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500"
-                    aria-hidden
-                  />
-                </div>
-              </div>
-              <p id="agent-reasoning-hint" className="text-[11px] text-zinc-500 leading-snug">
-                Synesia : reasoning_effort = disabled | high | max (même body que POST /llm-exec/round). En mode
-                thinking, la température et le top P ne sont pas appliqués côté serveur.
-              </p>
-            </div>
-          )}
           <CustomSlider
             id="agent-max-tokens"
             label="Max tokens"
@@ -386,17 +366,45 @@ export function AgentParameters({
             value={editedAgent.max_tokens ?? 0}
             onChange={v => onUpdateField('max_tokens', Math.round(v))}
           />
+          {showLlmReasoningSelect && (
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-zinc-400" htmlFor="agent-reasoning-effort">
+                Reasoning
+              </label>
+              <div className="relative min-w-0 w-full">
+                <select
+                  id="agent-reasoning-effort"
+                  className={`${inputBase} w-full pr-8 appearance-none cursor-pointer`}
+                  value={deepseekReasoningSelectValue(editedAgent.reasoning_effort)}
+                  onChange={e =>
+                    onUpdateField(
+                      'reasoning_effort',
+                      e.target.value as SpecializedAgentConfig['reasoning_effort']
+                    )
+                  }
+                >
+                  <option value="high">high (défaut doc)</option>
+                  <option value="max">max</option>
+                  <option value="disabled">désactivé (non-thinking)</option>
+                </select>
+                <ChevronDown
+                  className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500"
+                  aria-hidden
+                />
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* OpenAPI Tools */}
-      <section ref={openApiRef} className={boxBase}>
+      {/* Tools : OpenAPI + MCP */}
+      <section ref={toolsSectionRef} className={boxBase}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-zinc-100">OpenAPI Tools</h3>
+          <h3 className="text-sm font-semibold text-zinc-100">Tools</h3>
           {!isCreating && (
             <button
               type="button"
-              onClick={() => setShowOpenApiDropdown(v => !v)}
+              onClick={() => setShowToolsPicker(v => !v)}
               className="section-block inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-zinc-400 text-xs font-medium hover:bg-[var(--color-bg-content)] hover:text-zinc-200 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -404,113 +412,91 @@ export function AgentParameters({
             </button>
           )}
         </div>
-        {showOpenApiDropdown && (
-          <div className="mb-4 space-y-1 rounded-lg border border-zinc-800/80 bg-zinc-950/40 px-1 py-1">
-            {openApiLoading ? (
-              <p className="text-xs text-zinc-500 px-2 py-2">Chargement des schémas…</p>
-            ) : openApiSchemas.length === 0 ? (
-              <p className="text-xs text-zinc-500 px-2 py-2">Aucun schéma OpenAPI disponible.</p>
-            ) : (
-              <>
-                {openApiSchemas
-                  .filter(schema => !isSchemaLinked(schema.id))
-                  .map(schema => (
-                    <button
-                      key={schema.id}
-                      type="button"
-                      className="section-block w-full text-left px-2.5 py-2 rounded-lg text-zinc-300 text-sm hover:bg-[var(--color-bg-content)] transition-colors"
-                      onClick={() => handleLinkSchema(schema.id)}
-                    >
-                      {schema.name}
-                    </button>
-                  ))}
-                {openApiSchemas.filter(schema => !isSchemaLinked(schema.id)).length === 0 && (
-                  <p className="text-xs text-zinc-500 px-2.5 py-2">Tous les schémas disponibles sont déjà liés</p>
-                )}
-              </>
-            )}
+        {showToolsPicker && (
+          <div className="mb-4 space-y-3 rounded-lg border border-zinc-800/80 bg-zinc-950/40 px-1 py-2">
+            <div className="space-y-1">
+              <p className="px-2.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">OpenAPI</p>
+              {openApiLoading ? (
+                <p className="text-xs text-zinc-500 px-2 py-2">Chargement des schémas…</p>
+              ) : openApiSchemas.length === 0 ? (
+                <p className="text-xs text-zinc-500 px-2 py-2">Aucun schéma OpenAPI disponible.</p>
+              ) : (
+                <>
+                  {openApiSchemas
+                    .filter(schema => !isSchemaLinked(schema.id))
+                    .map(schema => (
+                      <button
+                        key={schema.id}
+                        type="button"
+                        className="section-block w-full text-left px-2.5 py-2 rounded-lg text-zinc-300 text-sm hover:bg-[var(--color-bg-content)] transition-colors flex items-center justify-between gap-2"
+                        onClick={() => handleLinkSchema(schema.id)}
+                      >
+                        <span className="truncate">{schema.name}</span>
+                        <ToolKindBadge kind="openapi" />
+                      </button>
+                    ))}
+                  {openApiSchemas.filter(schema => !isSchemaLinked(schema.id)).length === 0 && (
+                    <p className="text-xs text-zinc-500 px-2.5 py-2">Tous les schémas disponibles sont déjà liés</p>
+                  )}
+                </>
+              )}
+            </div>
+            <div className="space-y-1 border-t border-zinc-800/60 pt-2">
+              <p className="px-2.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">MCP</p>
+              {mcpLoading ? (
+                <p className="text-xs text-zinc-500 px-2 py-2">Chargement des serveurs…</p>
+              ) : mcpServers.length === 0 ? (
+                <p className="text-xs text-zinc-500 px-2 py-2">Aucun serveur MCP disponible.</p>
+              ) : (
+                <>
+                  {mcpServers
+                    .filter(server => !isServerLinked(server.id))
+                    .map(server => (
+                      <button
+                        key={server.id}
+                        type="button"
+                        className="section-block w-full text-left px-2.5 py-2 rounded-lg text-zinc-300 text-sm hover:bg-[var(--color-bg-content)] transition-colors flex items-center justify-between gap-2"
+                        onClick={() => handleLinkServer(server.id)}
+                      >
+                        <span className="truncate">{server.name}</span>
+                        <ToolKindBadge kind="mcp" />
+                      </button>
+                    ))}
+                  {mcpServers.filter(server => !isServerLinked(server.id)).length === 0 && (
+                    <p className="text-xs text-zinc-500 px-2.5 py-2">Tous les serveurs disponibles sont déjà liés</p>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         )}
         {isCreating ? (
-          <p className="text-xs text-zinc-500">Les outils OpenAPI peuvent être configurés après la création de l&apos;agent.</p>
-        ) : openApiLoading ? (
+          <p className="text-xs text-zinc-500">
+            Les outils OpenAPI et MCP peuvent être configurés après la création de l&apos;agent.
+          </p>
+        ) : openApiLoading || mcpLoading ? (
           <div className="flex items-center gap-1.5 text-zinc-500 text-xs">
             <span className="inline-block w-3 h-3 rounded-full border-[1.5px] border-zinc-600 border-t-transparent animate-spin" />
             Chargement…
           </div>
-        ) : agentOpenApiSchemas.length === 0 ? (
-          <p className="text-xs text-zinc-500">Aucun schéma OpenAPI lié.</p>
+        ) : agentOpenApiSchemas.length === 0 && agentMcpServers.length === 0 ? (
+          <p className="text-xs text-zinc-500">Aucun outil lié (OpenAPI ni MCP).</p>
         ) : (
           <div className="space-y-2">
             {agentOpenApiSchemas.map(schema => (
               <ToolItem
-                key={schema.id}
+                key={`openapi-${schema.id}`}
+                kind="openapi"
                 onRemove={() => handleUnlinkSchema(schema.openapi_schema_id)}
                 titleRemove="Retirer ce schéma"
               >
                 {schema.openapi_schema?.name ?? schema.openapi_schema_id}
               </ToolItem>
             ))}
-          </div>
-        )}
-      </section>
-
-      {/* MCP Tools */}
-      <section ref={mcpRef} className={boxBase}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-zinc-100">MCP Tools</h3>
-          {!isCreating && (
-            <button
-              type="button"
-              onClick={() => setShowMcpDropdown(v => !v)}
-              className="section-block inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-zinc-400 text-xs font-medium hover:bg-[var(--color-bg-content)] hover:text-zinc-200 transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Ajouter
-            </button>
-          )}
-        </div>
-        {showMcpDropdown && (
-          <div className="mb-4 space-y-1 rounded-lg border border-zinc-800/80 bg-zinc-950/40 px-1 py-1">
-            {mcpLoading ? (
-              <p className="text-xs text-zinc-500 px-2 py-2">Chargement des serveurs…</p>
-            ) : mcpServers.length === 0 ? (
-              <p className="text-xs text-zinc-500 px-2 py-2">Aucun serveur MCP disponible.</p>
-            ) : (
-              <>
-                {mcpServers
-                  .filter(server => !isServerLinked(server.id))
-                  .map(server => (
-                    <button
-                      key={server.id}
-                      type="button"
-                      className="section-block w-full text-left px-2.5 py-2 rounded-lg text-zinc-300 text-sm hover:bg-[var(--color-bg-content)] transition-colors"
-                      onClick={() => handleLinkServer(server.id)}
-                    >
-                      {server.name}
-                    </button>
-                  ))}
-                {mcpServers.filter(server => !isServerLinked(server.id)).length === 0 && (
-                  <p className="text-xs text-zinc-500 px-2.5 py-2">Tous les serveurs disponibles sont déjà liés</p>
-                )}
-              </>
-            )}
-          </div>
-        )}
-        {isCreating ? (
-          <p className="text-xs text-zinc-500">Les outils MCP peuvent être configurés après la création de l&apos;agent.</p>
-        ) : mcpLoading ? (
-          <div className="flex items-center gap-1.5 text-zinc-500 text-xs">
-            <span className="inline-block w-3 h-3 rounded-full border-[1.5px] border-zinc-600 border-t-transparent animate-spin" />
-            Chargement…
-          </div>
-        ) : agentMcpServers.length === 0 ? (
-          <p className="text-xs text-zinc-500">Aucun serveur MCP lié.</p>
-        ) : (
-          <div className="space-y-2">
             {agentMcpServers.map(link => (
               <ToolItem
-                key={link.id}
+                key={`mcp-${link.id}`}
+                kind="mcp"
                 onRemove={() => handleUnlinkServer(link.mcp_server_id)}
                 titleRemove="Retirer ce serveur"
               >

@@ -2,6 +2,12 @@
 
 Document de référence pour les agents qui génèrent du texte destiné à la synthèse vocale (TTS). Les speech tags permettent de contrôler le rythme, le ton et l’expressivité de la lecture.
 
+**Source officielle (liste à jour, exemples audio dans la console) :** [xAI — Text to Speech — Speech tags](https://docs.x.ai/developers/model-capabilities/audio/text-to-speech#speech-tags)
+
+La liste ci-dessous reprend **l’intégralité** des tags exposés sur cette page (inline `[…]` et balises englobantes `<…></…>`), dans les mêmes regroupements que la documentation.
+
+En mode vocal de l’app, un **résumé** de ces consignes est injecté au LLM via `TTS_VOICE_MODE_SYSTEM_PROMPT` dans `src/constants/ttsVoiceModePrompt.ts` (voir aussi `docs/TTS_SPEECH_TAGS_SYSTEM_PROMPT.md`) — même liste de tags, formulation compacte.
+
 ---
 
 ## 1. Wrapping tags (englobants)
@@ -22,19 +28,19 @@ Ces tags entourent un passage de texte pour modifier sa façon d’être lu. **O
 
 | Tag | Usage | Exemple |
 |-----|-------|---------|
-| `<slow>` | Ralentir | `<slow>Écoute bien.</slow>` |
-| `<fast>` | Accélérer | `<fast>En résumé : tout est prêt.</fast>` |
 | `<higher-pitch>` | Monter la voix | `<higher-pitch>Oh vraiment ?</higher-pitch>` |
 | `<lower-pitch>` | Descendre la voix | `<lower-pitch>C'est sérieux.</lower-pitch>` |
+| `<slow>` | Ralentir | `<slow>Écoute bien.</slow>` |
+| `<fast>` | Accélérer | `<fast>En résumé : tout est prêt.</fast>` |
 
 ### Style vocal
 
 | Tag | Usage | Exemple |
 |-----|-------|---------|
-| `<emphasis>` | Mettre en emphase | `<emphasis>C'est exactement ça.</emphasis>` |
 | `<sing-song>` | Ton chantant, léger | `<sing-song>Et hop, c'est fait !</sing-song>` |
 | `<singing>` | Chanter | `<singing>La la la...</singing>` |
 | `<laugh-speak>` | Parler en riant | `<laugh-speak>C'est trop drôle !</laugh-speak>` |
+| `<emphasis>` | Mettre en emphase | `<emphasis>C'est exactement ça.</emphasis>` |
 
 ---
 
@@ -50,7 +56,7 @@ Ces tags se placent **à un point précis** du texte pour ajouter une expression
 | `[long-pause]` | Pause plus longue |
 | `[hum-tune]` | Petit bourdonnement / réflexion |
 
-### Rires et émotions
+### Rires et pleurs
 
 | Tag | Usage |
 |-----|-------|
@@ -156,10 +162,11 @@ Hmm, [pause] laisse-moi réfléchir. [hum-tune] En fait, je pense que oui.
 
 ---
 
-## 6. Limite technique
+## 6. Limites techniques (API)
 
-Le texte envoyé au TTS est limité à **4 096 caractères**. Pour des contenus longs, découper par paragraphes ou par blocs logiques.
+- **`POST /v1/tts` (requête classique)** : le champ `text` est limité à **15 000 caractères** par requête (voir la doc x.ai). Découper les longs contenus par paragraphes ou segments logiques.
+- **WebSocket bidirectionnel** (`wss://api.x.ai/v1/tts`) : pas de limite totale sur la durée de session ; chaque message `text.delta` reste plafonné à **15 000 caractères**. Pour du texte très long, enchaîner des deltas puis `text.done`.
 
 ---
 
-*Référence : [xAI TTS Speech Tags](https://docs.x.ai/model-capabilities/audio/voice)*
+*Référence : [xAI — Text to Speech — Speech tags](https://docs.x.ai/developers/model-capabilities/audio/text-to-speech#speech-tags)*
