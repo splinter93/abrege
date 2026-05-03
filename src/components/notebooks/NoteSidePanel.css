@@ -125,6 +125,12 @@
   overflow-y: auto;
 }
 
+/* CTA « ajouter image d’en-tête » : premier enfant du wrapper (EditorLayout), coin supérieur droit du bloc scrollable */
+.note-side-panel-content .editor-content-wrapper > .editor-add-header-image-row {
+  top: 10px;
+  right: 10px;
+}
+
 /* Afficher l’image header dans le panneau (même layout que la page note) */
 .note-side-panel-content .editor-header-image {
   display: block;

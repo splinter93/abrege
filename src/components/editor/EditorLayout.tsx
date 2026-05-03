@@ -4,6 +4,8 @@ import A4PaginatedEditor from './A4PaginatedEditor';
 interface EditorLayoutProps {
   header?: React.ReactNode;
   documentHeader?: React.ReactNode;
+  /** Rendu en absolute dans le coin du wrapper de contenu (scroll) — ex. CTA image d’en-tête en panneau latéral */
+  contentWrapperOverlay?: React.ReactNode;
   title?: React.ReactNode;
   content?: React.ReactNode;
   footer?: React.ReactNode;
@@ -17,6 +19,7 @@ interface EditorLayoutProps {
 const EditorLayout: React.FC<EditorLayoutProps> = ({
   header,
   documentHeader,
+  contentWrapperOverlay,
   title,
   content,
   footer,
@@ -32,6 +35,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({
     <>
       {documentHeader}
       <div className="editor-content-wrapper">
+        {contentWrapperOverlay}
         <div className="editor-content-inner">
           {title && (
             <div className="noteLayout-title" style={fallbackColorStyle}>

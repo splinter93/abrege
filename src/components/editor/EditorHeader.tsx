@@ -2,7 +2,7 @@
 
 /**
  * EditorHeader - Header sobre et propre pour l'éditeur
- * Logo à gauche, toolbar au centre, 3 boutons à droite
+ * Marque / fermeture side-panel à gauche, toolbar au centre, actions à droite (pleine page à côté du menu en panneau)
  */
 
 import React from 'react';
@@ -125,14 +125,6 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
               >
                 <FiChevronsLeft className="editor-header__logo-icon" />
               </button>
-              <Link
-                href={`/private/note/${noteId}`}
-                className="editor-header__logo"
-                aria-label="Ouvrir en pleine page"
-                title="Ouvrir en pleine page"
-              >
-                <FiMaximize2 className="editor-header__logo-icon" />
-              </Link>
             </div>
             {noteTitle?.trim() ? (
               <span className="editor-header__note-title" title={noteTitle.trim()}>
@@ -381,6 +373,18 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
         {showLoginLink ? (
           <Link href={loginHref} className="editor-header__login-link">
             {loginLabel}
+          </Link>
+        ) : null}
+
+        {/* Side-panel : pleine page à gauche du menu kebab */}
+        {layoutMode === 'side-panel' && noteId ? (
+          <Link
+            href={`/private/note/${noteId}`}
+            className="editor-header__logo"
+            aria-label="Ouvrir en pleine page"
+            title="Ouvrir en pleine page"
+          >
+            <FiMaximize2 className="editor-header__logo-icon" />
           </Link>
         ) : null}
 

@@ -9,6 +9,7 @@
 import React from 'react';
 import '@/styles/editor-bundle.css';
 import EditorLayout from './EditorLayout';
+import { AddHeaderImageRow } from './AddHeaderImageRow';
 import EditorMainContent from './EditorMainContent';
 import EditorHeaderSection from './EditorHeaderSection';
 import CraftedButton from '@/components/CraftedButton';
@@ -432,21 +433,25 @@ const Editor: React.FC<EditorProps> = ({
     return null;
   }
 
-  // HTML notes: dedicated fullscreen layout + sidebar
+  // HTML notes: dedicated fullscreen layout + sidebar (sidebar désactivée en panneau latéral)
   if (note.source_type === 'html') {
     return (
       <>
-        <div
-          className="editor-sidebar-hover-zone"
-          onMouseEnter={() => setSidebarVisible(true)}
-          onMouseLeave={() => setSidebarVisible(false)}
-        />
-        <EditorSidebar
-          isVisible={sidebarVisible}
-          currentNoteId={noteId}
-          currentClasseurId={note?.classeur_id}
-          onNoteSelect={switchNote}
-        />
+        {layoutMode !== 'side-panel' && (
+          <>
+            <div
+              className="editor-sidebar-hover-zone"
+              onMouseEnter={() => setSidebarVisible(true)}
+              onMouseLeave={() => setSidebarVisible(false)}
+            />
+            <EditorSidebar
+              isVisible={sidebarVisible}
+              currentNoteId={noteId}
+              currentClasseurId={note?.classeur_id}
+              onNoteSelect={switchNote}
+            />
+          </>
+        )}
         <HtmlNoteEditor
           noteId={note.id}
           title={note.source_title}
@@ -477,8 +482,8 @@ const Editor: React.FC<EditorProps> = ({
           />
         )}
 
-        {/* Sidebar Navigation - Pattern chat exact */}
-      {!isReadonly && (
+        {/* Sidebar Navigation - Pattern chat exact (désactivée en panneau latéral note) */}
+      {!isReadonly && layoutMode !== 'side-panel' && (
         <>
           {/* Hover zone 100px à gauche */}
           <div
@@ -504,6 +509,14 @@ const Editor: React.FC<EditorProps> = ({
         
         <EditorLayout
           layoutClassName={editorState.headerImage.url ? (editorState.headerImage.titleInImage ? 'noteLayout imageWithTitle' : 'noteLayout imageOnly') : 'noteLayout imageOnly noImage'}
+          contentWrapperOverlay={
+            layoutMode === 'side-panel' &&
+            !editorState.headerImage.url &&
+            !editorState.ui.previewMode &&
+            !isReadonly ? (
+              <AddHeaderImageRow noteId={noteId} editorState={editorState} handlers={handlersWithEditor} />
+            ) : null
+          }
           header={(
             <EditorHeaderSection
               editor={editor}
@@ -543,6 +556,7 @@ const Editor: React.FC<EditorProps> = ({
               currentTitle={editorState.document.title}
               renderToolbar={false}
               layoutMode={layoutMode}
+              suppressAddHeaderImage={layoutMode === 'side-panel'}
             />
           )}
           a4Mode={editorState.ui.a4Mode}

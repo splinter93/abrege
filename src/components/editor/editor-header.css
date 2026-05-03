@@ -123,6 +123,24 @@
   height: var(--editor-header-icon-size);
 }
 
+/* Lien pleine page (side-panel) : dans la zone actions, à gauche du menu */
+.editor-header__actions .editor-header__logo {
+  position: static;
+  left: auto;
+  top: auto;
+  transform: none;
+  width: var(--editor-header-icon-hit);
+  height: var(--editor-header-icon-hit);
+  min-width: var(--editor-header-icon-hit);
+  min-height: var(--editor-header-icon-hit);
+  box-sizing: border-box;
+}
+
+.editor-header__actions .editor-header__logo-icon {
+  width: var(--editor-header-icon-size);
+  height: var(--editor-header-icon-size);
+}
+
 .editor-header__logo {
   position: absolute;
   left: 4px; /* Fixe à 4px du bord gauche, ne bouge jamais */

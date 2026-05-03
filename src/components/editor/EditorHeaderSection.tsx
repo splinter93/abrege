@@ -5,12 +5,11 @@
 
 import React from 'react';
 import type { FullEditorInstance } from '@/types/editor';
-import { FiImage } from 'react-icons/fi';
 import EditorHeader from './EditorHeader';
+import { AddHeaderImageRow } from './AddHeaderImageRow';
 import EditorHeaderImage from '@/components/EditorHeaderImage';
 import EditorKebabMenu from '@/components/EditorKebabMenu';
 import EditorTitle from './EditorTitle';
-import { uploadImageForNote } from '@/utils/fileUpload';
 import type { ShareSettings } from '@/types/sharing';
 import type { EditorState } from '@/hooks/editor/useEditorState';
 import type { UseEditorHandlersReturn } from '@/hooks/editor/useEditorHandlers';
@@ -38,6 +37,8 @@ interface EditorHeaderSectionProps {
   kebabMenuVariant?: 'editor' | 'public';
   /** `canvas` → toolbar compacte (police + menu Plus) */
   toolbarContext?: 'editor' | 'canvas';
+  /** Panneau latéral : le CTA image est rendu dans EditorLayout (coin du contenu) */
+  suppressAddHeaderImage?: boolean;
 }
 
 const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
@@ -60,6 +61,7 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
   showReadonlyVisitorKebab = false,
   kebabMenuVariant = 'editor',
   toolbarContext = 'editor',
+  suppressAddHeaderImage = false,
 }) => {
   const handleToolbarTranscription = React.useCallback(
     (text: string) => {
@@ -160,57 +162,15 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
         />
       )}
       
-      {/* Add header image CTA */}
+      {/* Add header image CTA — masqué si rendu ailleurs (ex. coin du wrapper en panneau latéral) */}
       {/* 🔧 FIX: Masquer en mode readonly (page publique) - aucun bouton de modification */}
-      {renderDocumentHeader && !editorState.headerImage.url && !editorState.ui.previewMode && !isReadonly && (
-        <div className="editor-add-header-image-row editor-add-image-center">
-          <div
-            className="editor-add-header-image"
-            onDragOver={(e) => {
-              const items = Array.from(e.dataTransfer?.items || []);
-              const hasLocalFile = items.some(it => it.kind === 'file');
-              const hasSidebarImage = e.dataTransfer?.types.includes('application/x-scrivia-image-url');
-              if (hasLocalFile || hasSidebarImage) e.preventDefault();
-            }}
-            onDrop={async (e) => {
-              try {
-                if (!e.dataTransfer) return;
-                
-                // ✅ 1. Vérifier si c'est une image depuis la sidebar
-                const imageUrl = e.dataTransfer.getData('application/x-scrivia-image-url');
-                if (imageUrl) {
-                  e.preventDefault();
-                  handlers.handleHeaderChange(imageUrl);
-                  return;
-                }
-                
-                // ✅ 2. Vérifier si c'est un fichier local (upload)
-                const files = Array.from(e.dataTransfer.files || []);
-                if (!files.length) return;
-                const image = files.find(f => /^image\/(jpeg|png|webp|gif)$/.test(f.type));
-                if (!image) return;
-                e.preventDefault();
-                const { publicUrl } = await uploadImageForNote(image, noteId);
-                handlers.handleHeaderChange(publicUrl);
-              } catch {
-                /* drop image en-tête annulé — ignoré */
-              }
-            }}
-          >
-            <button
-              className="editor-add-header-image-btn"
-              onClick={() => { 
-                editorState.setImageMenuTarget('header'); 
-                editorState.setImageMenuOpen(true); 
-              }}
-              aria-label="Ajouter une image d'en-tête"
-              title="Ajouter une image d'en-tête"
-            >
-              <FiImage size={20} />
-            </button>
-          </div>
-        </div>
-      )}
+      {renderDocumentHeader &&
+        !suppressAddHeaderImage &&
+        !editorState.headerImage.url &&
+        !editorState.ui.previewMode &&
+        !isReadonly && (
+          <AddHeaderImageRow noteId={noteId} editorState={editorState} handlers={handlers} />
+        )}
       
       {renderDocumentHeader && (
         <EditorHeaderImage
