@@ -779,6 +779,16 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
       llmConfig.top_p = this.config.topP;
     }
 
+    if (
+      modelMeta &&
+      typeof modelMeta.temperatureMax === 'number' &&
+      typeof llmConfig.temperature === 'number'
+    ) {
+      const lo =
+        typeof modelMeta.temperatureMin === 'number' ? modelMeta.temperatureMin : 0;
+      llmConfig.temperature = Math.max(lo, Math.min(llmConfig.temperature, modelMeta.temperatureMax));
+    }
+
     const orchestrationConfig: LiminalityOrchestrationConfig = {
       max_loops: this.config.maxLoops || 10
     };

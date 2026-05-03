@@ -259,6 +259,40 @@ describe('LiminalityProvider', () => {
       expect(global.fetch).toHaveBeenCalled();
     });
 
+    test('should clamp temperature to catalogue temperatureMax for MiMo (OpenRouter max 1.5)', async () => {
+      const mimoProvider = new LiminalityProvider({
+        apiKey: 'test-api-key',
+        baseUrl: 'https://test.api.com',
+        model: 'openrouter/mimo-v2.5',
+        maxTokens: 4000,
+        temperature: 1.8,
+        topP: 0.9,
+      });
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
+        async (_url: string, init?: RequestInit) => {
+          const body = JSON.parse(String(init?.body ?? '{}')) as {
+            llmConfig?: { temperature?: number };
+          };
+          expect(body.llmConfig?.temperature).toBe(1.5);
+          return {
+            ok: true,
+            json: async () => ({
+              message: { role: 'assistant', content: 'ok' },
+              usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+              finish_reason: 'stop',
+            }),
+          };
+        }
+      );
+
+      await mimoProvider.callWithMessages(
+        [{ id: '1', role: 'user' as const, content: 'hi' }],
+        []
+      );
+      expect(global.fetch).toHaveBeenCalled();
+    });
+
     test('should handle API errors correctly', async () => {
       (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: false,

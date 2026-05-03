@@ -30,6 +30,10 @@ export interface GroqModelInfo {
   };
   description: string;
   recommended?: boolean;
+  /** Plafond température API (ex. OpenRouter MiMo : max 1.5) — appliqué dans Liminality avant envoi */
+  temperatureMax?: number;
+  /** Plancher température API (souvent 0) */
+  temperatureMin?: number;
 }
 
 export const GROQ_MODELS: GroqModelInfo[] = [
@@ -141,7 +145,9 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     speed: 700,
     pricing: { input: '$0.10', output: '$0.30' },
     description: 'Xiaomi MiMo-V2-Flash via OpenRouter, avec reasoning et outils',
-    recommended: true
+    recommended: true,
+    temperatureMin: 0,
+    temperatureMax: 1.5
   },
   {
     id: 'openrouter/mimo-v2.5',
@@ -154,8 +160,10 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     speed: 550,
     pricing: { input: 'Variable', output: 'Variable' },
     description:
-      'Xiaomi MiMo v2.5 (OpenRouter: xiaomi/mimo-v2.5) — entrées complètes dont images, vision et outils',
-    recommended: false
+      'Xiaomi MiMo v2.5 (OpenRouter: xiaomi/mimo-v2.5) — entrées complètes dont images, vision et outils ; température API [0, 1.5] (défaut OpenRouter 1.0)',
+    recommended: false,
+    temperatureMin: 0,
+    temperatureMax: 1.5
   },
   {
     id: 'openrouter/mimo-v2.5-pro',
@@ -167,8 +175,10 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     maxOutput: 131072,
     speed: 500,
     pricing: { input: 'Variable', output: 'Variable' },
-    description: 'Xiaomi MiMo v2.5 Pro (OpenRouter: xiaomi/mimo-v2.5-pro) via Liminality, contexte 1M, reasoning et outils',
-    recommended: false
+    description: 'Xiaomi MiMo v2.5 Pro (OpenRouter: xiaomi/mimo-v2.5-pro) via Liminality, contexte 1M, reasoning et outils ; température API [0, 1.5]',
+    recommended: false,
+    temperatureMin: 0,
+    temperatureMax: 1.5
   },
   {
     id: 'deepseek/deepseek-v4-flash',
@@ -435,8 +445,10 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     maxOutput: 8192,
     speed: 550,
     pricing: { input: 'Variable', output: 'Variable' },
-    description: 'Xiaomi MiMo-V2-Omni via OpenRouter (Liminality)',
-    recommended: false
+    description: 'Xiaomi MiMo-V2-Omni via OpenRouter (Liminality) ; température API [0, 1.5]',
+    recommended: false,
+    temperatureMin: 0,
+    temperatureMax: 1.5
   },
   {
     id: 'openrouter/glm-5-turbo',
