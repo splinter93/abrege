@@ -120,6 +120,22 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const showAssistantLoadingDots =
     assistantStreaming && !hasStreamTimeline && !content.trim();
 
+  /** Bulles discrètes (italique, gris) — uniquement quand le contexte TTS est en mode vocal. */
+  const vocalBubble = Boolean(tts?.stripInlineTtsTagsForDisplay);
+
+  const assistantStreamBody =
+    hasStreamTimeline ? (
+      <StreamTimelineRenderer
+        timeline={timeline!}
+        isActiveStreaming={Boolean(assistantMessage?.isStreaming)}
+        stripInlineTtsDisplayTags={Boolean(tts?.stripInlineTtsTagsForDisplay)}
+      />
+    ) : content ? (
+      <div className="chatgpt-message-content">
+        <EnhancedMarkdownMessage content={assistantMarkdownForDisplay} />
+      </div>
+    ) : null;
+
   return (
     <div className={`chatgpt-message chatgpt-message-${role} ${className || ''}`}>
       {/* Images attachées (messages user uniquement) - au-dessus de la bulle */}
@@ -140,7 +156,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         </div>
       )}
 
-      <div className={`chatgpt-message-bubble chatgpt-message-bubble-${role}`}>
+      <div
+        className={`chatgpt-message-bubble chatgpt-message-bubble-${role}${vocalBubble ? ' chatgpt-message-bubble--vocal-mode' : ''}`}
+      >
         {/* Notes attachées (messages user uniquement) */}
         {hasAttachedNotes && (
           <div className="chatgpt-message-notes">
@@ -179,16 +197,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             data-chat-stream-anchor=""
             className={`chatgpt-assistant-anchor${assistantStreaming ? ' chatgpt-assistant-anchor--streaming' : ''}`}
           >
-            {hasStreamTimeline ? (
-              <StreamTimelineRenderer
-                timeline={timeline!}
-                isActiveStreaming={Boolean(assistantMessage?.isStreaming)}
-                stripInlineTtsDisplayTags={Boolean(tts?.stripInlineTtsTagsForDisplay)}
-              />
-            ) : content ? (
-              <div className="chatgpt-message-content">
-                <EnhancedMarkdownMessage content={assistantMarkdownForDisplay} />
-              </div>
+            {assistantStreamBody ? (
+              vocalBubble ? (
+                <div className="chatgpt-vocal-mode-utterance">{assistantStreamBody}</div>
+              ) : (
+                assistantStreamBody
+              )
             ) : null}
             {showAssistantLoadingDots ? (
               <div className="chatgpt-message-loading" role="status" aria-label="Chargement en cours">
@@ -203,19 +217,38 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         ) : (
           <>
             {content ? (
-              <div className="chatgpt-message-content">
-                <div className="user-message-expandable">
-                  <div
-                    ref={userContentRef}
-                    className={`user-message-expandable__content${!isExpanded ? ' user-message-expandable__content--clamped' : ''}`}
-                  >
-                    <UserMessageText
-                      content={content}
-                      mentions={userMessage?.mentions}
-                      prompts={userMessage?.prompts}
-                    />
+              <div
+                className={`chatgpt-message-content${vocalBubble ? ' chatgpt-message-content--vocal-mode' : ''}`}
+              >
+                {vocalBubble ? (
+                  <div className="chatgpt-vocal-mode-utterance chatgpt-vocal-mode-utterance--user">
+                    <div className="user-message-expandable">
+                      <div
+                        ref={userContentRef}
+                        className={`user-message-expandable__content${!isExpanded ? ' user-message-expandable__content--clamped' : ''}`}
+                      >
+                        <UserMessageText
+                          content={content}
+                          mentions={userMessage?.mentions}
+                          prompts={userMessage?.prompts}
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="user-message-expandable">
+                    <div
+                      ref={userContentRef}
+                      className={`user-message-expandable__content${!isExpanded ? ' user-message-expandable__content--clamped' : ''}`}
+                    >
+                      <UserMessageText
+                        content={content}
+                        mentions={userMessage?.mentions}
+                        prompts={userMessage?.prompts}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             ) : null}
             {isStreaming && !content ? (

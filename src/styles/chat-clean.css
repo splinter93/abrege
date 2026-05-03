@@ -2031,6 +2031,28 @@ body.chat-theme-glass .chatgpt-messages > div {
   filter: brightness(1.05);
 }
 
+/* Mode vocal : bulles user + assistant plus discrètes (italique, gris plus sombre) */
+.chatgpt-vocal-mode-utterance {
+  font-style: italic;
+  color: rgb(161, 161, 170);
+  margin-top: 0.1rem;
+  min-width: 0;
+}
+
+.chatgpt-vocal-mode-utterance--user {
+  color: rgb(176, 176, 182);
+}
+
+.chatgpt-vocal-mode-utterance .chat-markdown,
+.chatgpt-vocal-mode-utterance .chat-markdown p,
+.chatgpt-vocal-mode-utterance .stream-timeline-text {
+  color: inherit;
+}
+
+.chatgpt-message-bubble--vocal-mode.chatgpt-message-bubble-user .user-message-expandable__content {
+  font-weight: var(--chat-weight-normal, 425);
+}
+
 /* ── Expand / collapse messages user longs ─────────────────────────────── */
 .user-message-expandable {
   position: relative;
