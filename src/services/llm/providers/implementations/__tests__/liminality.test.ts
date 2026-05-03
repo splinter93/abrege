@@ -219,6 +219,46 @@ describe('LiminalityProvider', () => {
       );
     });
 
+    test('should clamp max_completion_tokens to catalogue maxOutput (vision fallback MiMo vs agent DeepSeek)', async () => {
+      const mimoProvider = new LiminalityProvider({
+        apiKey: 'test-api-key',
+        baseUrl: 'https://test.api.com',
+        model: 'openrouter/mimo-v2.5',
+        maxTokens: 384000,
+        temperature: 0.7,
+        topP: 0.9,
+      });
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
+        async (_url: string, init?: RequestInit) => {
+          const body = JSON.parse(String(init?.body ?? '{}')) as {
+            llmConfig?: { max_completion_tokens?: number };
+          };
+          expect(body.llmConfig?.max_completion_tokens).toBe(8192);
+          return {
+            ok: true,
+            json: async () => ({
+              message: { role: 'assistant', content: 'ok' },
+              usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+              finish_reason: 'stop',
+            }),
+          };
+        }
+      );
+
+      const messages = [
+        {
+          id: '1',
+          role: 'user' as const,
+          content: 'hi',
+          attachedImages: [{ url: 'https://example.com/a.jpg' }],
+        },
+      ];
+
+      await mimoProvider.callWithMessages(messages, []);
+      expect(global.fetch).toHaveBeenCalled();
+    });
+
     test('should handle API errors correctly', async () => {
       (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: false,

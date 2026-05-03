@@ -17,6 +17,9 @@ import type { LLMProvider, AppContext, LlmAgentDatasourceRef } from '../../types
 import type { ChatMessage } from '@/types/chat';
 import type { LLMResponse, ToolCall, Tool, Usage } from '../../types/strictTypes';
 import { simpleLogger as logger } from '@/utils/logger';
+import { getModelInfo } from '@/constants/groqModels';
+import { extractTextFromContent } from '@/utils/imageUtils';
+import type { MessageContent } from '@/types/image';
 import { getSystemMessage } from '../../templates';
 import { LiminalityToolsAdapter, type SynesiaToolsConfig } from '../adapters/LiminalityToolsAdapter';
 import type { 
@@ -607,6 +610,19 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
   }
 
   /**
+   * Contenu message → chaîne pour l’API Synesia (jamais de tableau multi-modal dans `content`).
+   * Sinon OpenRouter renvoie souvent 400 quand l’historique contient d’anciennes parties image_url.
+   */
+  private stringifyMessageContentForLiminality(content: unknown): string {
+    if (content == null || content === '') return '';
+    if (typeof content === 'string') return content;
+    if (Array.isArray(content)) {
+      return extractTextFromContent(content as MessageContent);
+    }
+    return '';
+  }
+
+  /**
    * Convertit les ChatMessage vers le format API Liminality
    */
   private convertChatMessagesToApiFormat(messages: ChatMessage[]): LiminalityMessage[] {
@@ -615,7 +631,7 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
     for (const msg of messages) {
       const limMsg: LiminalityMessage = {
         role: this.mapRole(msg.role),
-        content: msg.content || ''
+        content: this.stringifyMessageContentForLiminality(msg.content as unknown)
       };
 
       // Ajouter tool_calls si présents (assistant messages uniquement)
@@ -733,8 +749,16 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
       ? resolveDeepseekReasoningEffortForPayload(this.config.reasoningEffort)
       : undefined;
 
+    const modelMeta = getModelInfo(this.config.model);
+    const catalogMaxOut =
+      modelMeta && typeof modelMeta.maxOutput === 'number' && modelMeta.maxOutput > 0
+        ? modelMeta.maxOutput
+        : null;
+    const maxCompletionTokens =
+      catalogMaxOut != null ? Math.min(this.config.maxTokens, catalogMaxOut) : this.config.maxTokens;
+
     const llmConfig: LiminalityLLMConfig = {
-      max_completion_tokens: this.config.maxTokens,
+      max_completion_tokens: maxCompletionTokens,
       tool_choice: 'auto',
       parallel_tool_calls: false // Désactivé pour éviter les problèmes
     };
