@@ -14,6 +14,7 @@ import NotePreview from './NotePreview';
 import { simpleLogger as logger } from '@/utils/logger';
 import { useTextToSpeechContextOptional } from '@/contexts/TextToSpeechContext';
 import { stripMarkdownForTTS } from '@/utils/stripMarkdownForTTS';
+import { stripTtsInlineTagsForDisplay } from '@/utils/stripTtsInlineTagsForDisplay';
 import { Minimize2 } from 'lucide-react';
 import type { StreamTextEvent } from '@/types/streamTimeline';
 import './ReasoningDropdown.css';
@@ -56,6 +57,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     if (texts.length === 0) return content;
     return texts.join('\n\n');
   }, [message, content]);
+
+  /** Markdown assistant affiché : en mode vocal, masque les `[tag]` TTS (le texte brut / copie / TTS garde les tags). */
+  const assistantMarkdownForDisplay = useMemo(() => {
+    if (role !== 'assistant') return content;
+    if (!tts?.stripInlineTtsTagsForDisplay) return content;
+    return stripTtsInlineTagsForDisplay(content);
+  }, [role, content, tts?.stripInlineTtsTagsForDisplay]);
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [needsTruncation, setNeedsTruncation] = useState(false);
@@ -175,10 +183,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               <StreamTimelineRenderer
                 timeline={timeline!}
                 isActiveStreaming={Boolean(assistantMessage?.isStreaming)}
+                stripInlineTtsDisplayTags={Boolean(tts?.stripInlineTtsTagsForDisplay)}
               />
             ) : content ? (
               <div className="chatgpt-message-content">
-                <EnhancedMarkdownMessage content={content} />
+                <EnhancedMarkdownMessage content={assistantMarkdownForDisplay} />
               </div>
             ) : null}
             {showAssistantLoadingDots ? (

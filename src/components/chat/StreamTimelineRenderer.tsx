@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import type { StreamTimeline } from '@/types/streamTimeline';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
+import { stripTtsInlineTagsForDisplay } from '@/utils/stripTtsInlineTagsForDisplay';
 import { StreamingIndicator } from './StreamingIndicator';
 import PlanStepList from './PlanStepList';
 import { simpleLogger as logger } from '@/utils/logger';
@@ -11,6 +12,8 @@ interface StreamTimelineRendererProps {
   timeline: StreamTimeline;
   className?: string;
   isActiveStreaming?: boolean; // ✅ NOUVEAU: Indique si le streaming est actif
+  /** Mode vocal : masquer `[pause]`, `[laugh]`, etc. dans le markdown affiché */
+  stripInlineTtsDisplayTags?: boolean;
 }
 
 /**
@@ -18,7 +21,8 @@ interface StreamTimelineRendererProps {
  * Affiche les blocs de texte et les tool executions dans le bon ordre
  * ✅ MEMO: Évite le re-render et le clignotement à la fin du stream
  */
-const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = React.memo(({ timeline, className = '', isActiveStreaming = false }) => {
+const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = React.memo(
+  ({ timeline, className = '', isActiveStreaming = false, stripInlineTtsDisplayTags = false }) => {
   // État pour gérer l'expansion des blocs d'exécution
   const [expandedBlocks, setExpandedBlocks] = useState<Set<number>>(new Set());
   
@@ -54,12 +58,16 @@ const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = React.memo
     <div className={`stream-timeline ${className}`}>
       {timeline.items.map((item, index) => {
         switch (item.type) {
-          case 'text':
+          case 'text': {
+            const md = stripInlineTtsDisplayTags
+              ? stripTtsInlineTagsForDisplay(item.content)
+              : item.content;
             return (
               <div key={`text-${index}`} className="stream-timeline-text">
-                <EnhancedMarkdownMessage content={item.content} />
+                <EnhancedMarkdownMessage content={md} />
               </div>
             );
+          }
 
           case 'tool_execution': {
             // Tools internes (__plan_update) : pas de bloc StreamingIndicator (plan déjà affiché via type plan)

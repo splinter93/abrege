@@ -19,6 +19,8 @@ interface TextToSpeechContextValue {
   resume: () => void;
   isPlayingMessageId: string | null;
   isPaused: boolean;
+  /** Mode vocal actif : masquer les `[tag]` TTS dans le rendu markdown des messages assistant. */
+  stripInlineTtsTagsForDisplay: boolean;
 }
 
 const TextToSpeechContext = createContext<TextToSpeechContextValue | null>(null);
@@ -177,7 +179,8 @@ export function TextToSpeechProvider({ children, defaultVoiceId, defaultLanguage
         pause: pauseUnified,
         resume: resumeUnified,
         isPlayingMessageId: isPlayingMessageIdUnified,
-        isPaused: isPausedUnified
+        isPaused: isPausedUnified,
+        stripInlineTtsTagsForDisplay: streamingMode
       }}
     >
       {children}
