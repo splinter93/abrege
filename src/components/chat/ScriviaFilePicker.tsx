@@ -159,15 +159,6 @@ const ScriviaFilePicker: React.FC<ScriviaFilePickerProps> = ({
     }
   };
 
-  // Formatage de la taille
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  };
-
   return (
     <div className="scrivia-file-picker-overlay" onClick={handleOverlayClick}>
       <div className="scrivia-file-picker" onClick={(e) => e.stopPropagation()}>
@@ -239,12 +230,20 @@ const ScriviaFilePicker: React.FC<ScriviaFilePickerProps> = ({
                     key={file.id}
                     className={`scrivia-file-picker-item ${isSelected ? 'selected' : ''}`}
                     onClick={() => handleFileClick(file.id)}
+                    onDragStart={(e) => {
+                      e.preventDefault();
+                    }}
                   >
                     <div className="scrivia-file-picker-item-preview">
                       <img
                         src={file.url}
                         alt={file.filename}
                         loading="lazy"
+                        draggable={false}
+                        onDragStart={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                         }}
@@ -259,9 +258,6 @@ const ScriviaFilePicker: React.FC<ScriviaFilePickerProps> = ({
                     </div>
                     <div className="scrivia-file-picker-item-info">
                       <div className="scrivia-file-picker-item-name">{file.filename}</div>
-                      <div className="scrivia-file-picker-item-meta">
-                        {formatFileSize(file.size)}
-                      </div>
                     </div>
                   </div>
                 );

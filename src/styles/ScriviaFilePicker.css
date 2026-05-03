@@ -55,7 +55,10 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px 20px;
+  box-sizing: border-box;
+  height: 60px;
+  padding: 0 20px;
+  flex-shrink: 0;
   border-bottom: 1px solid var(--chat-border-soft, rgba(255, 255, 255, 0.08));
   background: var(--chat-overlay-subtle, rgba(0, 0, 0, 0.2));
 }
@@ -80,26 +83,32 @@
   color: var(--chat-text-secondary, #a0a0a0);
 }
 
-/* View Controls */
+/* View Controls — même hauteur que .scrivia-file-picker-search */
 .scrivia-file-picker-view-controls {
   display: flex;
+  align-items: stretch;
   gap: 4px;
+  box-sizing: border-box;
+  height: 36px;
+  padding: 2px;
+  flex-shrink: 0;
   background: var(--chat-overlay-subtle, rgba(255, 255, 255, 0.05));
   border-radius: 6px;
-  padding: 4px;
 }
 
 .scrivia-file-picker-view-btn {
   background: transparent;
   border: none;
   color: var(--chat-text-secondary, #a0a0a0);
-  padding: 6px 8px;
+  padding: 0 8px;
   border-radius: 4px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.15s ease;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .scrivia-file-picker-view-btn:hover {
@@ -112,22 +121,25 @@
   color: var(--chat-text-primary, #e5e5e5);
 }
 
-/* Search */
+/* Search — même hauteur que .scrivia-file-picker-view-controls */
 .scrivia-file-picker-search {
   display: flex;
   align-items: center;
   gap: 8px;
+  box-sizing: border-box;
+  height: 36px;
+  padding: 0 12px;
+  flex-shrink: 0;
   background: var(--chat-overlay-subtle, rgba(255, 255, 255, 0.05));
-  border: 1px solid var(--chat-border-subtle, rgba(255, 255, 255, 0.1));
+  border: 0.5px solid var(--chat-border-subtle, rgba(255, 255, 255, 0.1));
   border-radius: 8px;
-  padding: 8px 12px;
   min-width: 200px;
   transition: all 0.2s ease;
 }
 
 .scrivia-file-picker-search:focus-within {
   background: var(--chat-overlay-soft, rgba(255, 255, 255, 0.08));
-  border-color: var(--chat-border-subtle, rgba(255, 255, 255, 0.2));
+  border: 0.5px solid var(--chat-border-subtle, rgba(255, 255, 255, 0.22));
 }
 
 .scrivia-file-picker-search svg {
@@ -141,7 +153,9 @@
   outline: none;
   color: var(--chat-text-primary, #e5e5e5);
   font-size: 14px;
+  line-height: 1.2;
   width: 100%;
+  height: 100%;
   font-family: system-ui, -apple-system, sans-serif;
 }
 
@@ -155,7 +169,7 @@
   overflow-y: auto;
   padding: 20px;
   min-height: 400px;
-  max-height: calc(85vh - 180px);
+  max-height: calc(85vh - 120px);
 }
 
 .scrivia-file-picker-content::-webkit-scrollbar {
@@ -199,10 +213,15 @@
   cursor: pointer;
   transition: all 0.2s ease;
   overflow: hidden;
+  user-select: none;
+  -moz-user-select: none;
 }
 
 .scrivia-file-picker-grid.grid .scrivia-file-picker-item {
   aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .scrivia-file-picker-grid.list .scrivia-file-picker-item {
@@ -235,13 +254,12 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .scrivia-file-picker-grid.grid .scrivia-file-picker-item-preview {
-  height: 140px;
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
 }
 
 .scrivia-file-picker-grid.list .scrivia-file-picker-item-preview {
@@ -253,9 +271,17 @@
 }
 
 .scrivia-file-picker-item-preview img {
+  position: absolute;
+  inset: 0;
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
+  /* Pas de drag natif sur les images (sinon la modale / overlay se comportent mal) */
+  -webkit-user-drag: none;
+  user-select: none;
+  -moz-user-select: none;
 }
 
 .scrivia-file-picker-item-check {
@@ -280,6 +306,7 @@
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+  flex-shrink: 0;
 }
 
 .scrivia-file-picker-grid.list .scrivia-file-picker-item-info {
@@ -364,17 +391,21 @@
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  padding: 16px 20px;
+  box-sizing: border-box;
+  height: 60px;
+  padding: 0 20px;
+  flex-shrink: 0;
   border-top: 1px solid var(--chat-border-soft, rgba(255, 255, 255, 0.08));
   background: var(--chat-overlay-subtle, rgba(0, 0, 0, 0.2));
 }
 
 .scrivia-file-picker-btn-secondary,
 .scrivia-file-picker-btn-primary {
-  padding: 10px 20px;
+  padding: 9px 18px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
+  line-height: 1.25;
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: system-ui, -apple-system, sans-serif;
@@ -430,6 +461,8 @@
 
   .scrivia-file-picker-header {
     flex-wrap: wrap;
+    height: auto;
+    min-height: 60px;
   }
 
   .scrivia-file-picker-search {
