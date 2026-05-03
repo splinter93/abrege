@@ -4,6 +4,7 @@
  */
 
 import type { EditorPrompt } from '@/types/editorPrompts';
+import type { NoteMention } from '@/types/noteMention';
 import type { Agent } from '@/types/chat';
 import { simpleLogger as logger } from '@/utils/logger';
 import { MentionedNotesFormatter } from '@/services/llm/MentionedNotesFormatter';
@@ -25,6 +26,30 @@ interface EditorPromptContext {
   noteSlug?: string;
   classeurId?: string;
   classeurName?: string;
+}
+
+/** Payload POST `/api/chat/llm` pour l'exécution d'un prompt éditeur */
+interface EditorPromptLlmPayload {
+  message: string;
+  context: {
+    type: 'editor_prompt';
+    sessionId: string;
+    agentId: string | null;
+    promptId: string;
+    promptName: string;
+    selectedText: string;
+    mentionedNotes?: NoteMention[];
+  };
+  history: unknown[];
+  provider: 'groq';
+  response_format?: {
+    type: 'json_schema';
+    json_schema: {
+      name: string;
+      strict: boolean;
+      schema: NonNullable<EditorPrompt['output_schema']>;
+    };
+  };
 }
 
 /**
@@ -173,7 +198,7 @@ export class EditorPromptExecutor {
       const tempSessionId = crypto.randomUUID();
 
       // 4. Préparer le payload de la requête
-      const requestPayload: any = {
+      const requestPayload: EditorPromptLlmPayload = {
         message: finalPrompt,
         context: {
           type: 'editor_prompt',

@@ -22,13 +22,14 @@ describe('Sanitization côté serveur', () => {
   describe('sanitizeMarkdownContent', () => {
     it('devrait échapper le HTML brut', () => {
       const input = '# Title\n<script>alert("XSS")</script>';
-      const expected = '# Title\n&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;';
+      // Politique serveur : & < > uniquement (voir markdownSanitizer.server.ts) — les guillemets restent littéraux une fois les balises neutralisées.
+      const expected = '# Title\n&lt;script&gt;alert("XSS")&lt;/script&gt;';
       expect(sanitizeMarkdownContent(input)).toBe(expected);
     });
 
     it('devrait gérer les balises imbriquées', () => {
       const input = '<div><span onclick="alert()">Click</span></div>';
-      const expected = '&lt;div&gt;&lt;span onclick=&quot;alert()&quot;&gt;Click&lt;/span&gt;&lt;/div&gt;';
+      const expected = '&lt;div&gt;&lt;span onclick="alert()"&gt;Click&lt;/span&gt;&lt;/div&gt;';
       expect(sanitizeMarkdownContent(input)).toBe(expected);
     });
 

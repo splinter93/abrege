@@ -26,8 +26,16 @@ export default function ChatWidgetRoot() {
   const isDragging = useRef(false);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return;
+    }
     const mq = window.matchMedia(WIDGET_DESKTOP_MIN);
-    const sync = () => { if (!mq.matches) close(); };
+    if (!mq) {
+      return;
+    }
+    const sync = () => {
+      if (!mq.matches) close();
+    };
     sync();
     mq.addEventListener('change', sync);
     return () => mq.removeEventListener('change', sync);

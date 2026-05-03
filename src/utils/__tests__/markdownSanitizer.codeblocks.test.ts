@@ -120,8 +120,8 @@ More text with "quotes" and 'apostrophes'.`;
       // Bloc de code préservé
       expect(output).toContain('Map<K, V>');
       
-      // Quotes échappés hors code
-      expect(output).toContain('&quot;quotes&quot;');
+      // Guillemets du texte markdown inchangés (seuls & < > sont échappés pour le HTML brut)
+      expect(output).toContain('More text with "quotes"');
     });
 
     it('devrait gérer les blocs de code imbriqués (markdown dans markdown)', () => {

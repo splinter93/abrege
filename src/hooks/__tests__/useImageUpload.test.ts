@@ -22,6 +22,22 @@ vi.mock('@/utils/imageUtils', () => ({
 }));
 
 import { chatImageUploadService } from '@/services/chatImageUploadService';
+import type { UploadResult } from '@/services/chatImageUploadService';
+
+function mockUploadOk(url: string, mimeType = 'image/png', fileName = 'mock.png'): UploadResult {
+  return {
+    success: true,
+    images: [
+      {
+        url,
+        fileName,
+        mimeType,
+        size: 1024,
+        uploadedAt: Date.now(),
+      },
+    ],
+  };
+}
 
 describe('useImageUpload', () => {
   const sessionId = 'test-session-123';
@@ -55,10 +71,9 @@ describe('useImageUpload', () => {
       // Fichier de 5MB
       const validFile = new File(['x'.repeat(5 * 1024 * 1024)], 'valid.png', { type: 'image/png' });
 
-      (chatImageUploadService.uploadImages as any).mockResolvedValue({
-        success: true,
-        images: [{ url: 'https://s3.example.com/image.png' }]
-      });
+      vi.mocked(chatImageUploadService.uploadImages).mockResolvedValue(
+        mockUploadOk('https://s3.example.com/image.png'),
+      );
 
       let success: boolean = false;
       await act(async () => {
@@ -76,10 +91,9 @@ describe('useImageUpload', () => {
       // Fichier exactement 10MB
       const exactFile = new File(['x'.repeat(10 * 1024 * 1024)], 'exact.png', { type: 'image/png' });
 
-      (chatImageUploadService.uploadImages as any).mockResolvedValue({
-        success: true,
-        images: [{ url: 'https://s3.example.com/image.png' }]
-      });
+      vi.mocked(chatImageUploadService.uploadImages).mockResolvedValue(
+        mockUploadOk('https://s3.example.com/image.png'),
+      );
 
       let success: boolean = false;
       await act(async () => {
@@ -97,10 +111,9 @@ describe('useImageUpload', () => {
 
       const jpegFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
 
-      (chatImageUploadService.uploadImages as any).mockResolvedValue({
-        success: true,
-        images: [{ url: 'https://s3.example.com/image.jpg' }]
-      });
+      vi.mocked(chatImageUploadService.uploadImages).mockResolvedValue(
+        mockUploadOk('https://s3.example.com/image.jpg', 'image/jpeg', 'test.jpg'),
+      );
 
       let success: boolean = false;
       await act(async () => {
@@ -116,10 +129,9 @@ describe('useImageUpload', () => {
 
       const pngFile = new File(['test'], 'test.png', { type: 'image/png' });
 
-      (chatImageUploadService.uploadImages as any).mockResolvedValue({
-        success: true,
-        images: [{ url: 'https://s3.example.com/image.png' }]
-      });
+      vi.mocked(chatImageUploadService.uploadImages).mockResolvedValue(
+        mockUploadOk('https://s3.example.com/image.png'),
+      );
 
       let success: boolean = false;
       await act(async () => {
@@ -134,10 +146,9 @@ describe('useImageUpload', () => {
 
       const gifFile = new File(['test'], 'test.gif', { type: 'image/gif' });
 
-      (chatImageUploadService.uploadImages as any).mockResolvedValue({
-        success: true,
-        images: [{ url: 'https://s3.example.com/image.gif' }]
-      });
+      vi.mocked(chatImageUploadService.uploadImages).mockResolvedValue(
+        mockUploadOk('https://s3.example.com/image.gif', 'image/gif', 'test.gif'),
+      );
 
       let success: boolean = false;
       await act(async () => {
@@ -152,10 +163,9 @@ describe('useImageUpload', () => {
 
       const webpFile = new File(['test'], 'test.webp', { type: 'image/webp' });
 
-      (chatImageUploadService.uploadImages as any).mockResolvedValue({
-        success: true,
-        images: [{ url: 'https://s3.example.com/image.webp' }]
-      });
+      vi.mocked(chatImageUploadService.uploadImages).mockResolvedValue(
+        mockUploadOk('https://s3.example.com/image.webp', 'image/webp', 'test.webp'),
+      );
 
       let success: boolean = false;
       await act(async () => {
@@ -202,10 +212,9 @@ describe('useImageUpload', () => {
 
       const file = new File(['test'], 'test.png', { type: 'image/png' });
 
-      (chatImageUploadService.uploadImages as any).mockResolvedValue({
-        success: true,
-        images: [{ url: 'https://s3.example.com/image.png' }]
-      });
+      vi.mocked(chatImageUploadService.uploadImages).mockResolvedValue(
+        mockUploadOk('https://s3.example.com/image.png'),
+      );
 
       await act(async () => {
         await result.current.processAndUploadImage(file);
@@ -223,10 +232,9 @@ describe('useImageUpload', () => {
 
       const file = new File(['test'], 'test.png', { type: 'image/png' });
 
-      (chatImageUploadService.uploadImages as any).mockResolvedValue({
-        success: true,
-        images: [{ url: 'https://s3.example.com/uploaded.png' }]
-      });
+      vi.mocked(chatImageUploadService.uploadImages).mockResolvedValue(
+        mockUploadOk('https://s3.example.com/uploaded.png'),
+      );
 
       await act(async () => {
         await result.current.processAndUploadImage(file);
@@ -243,7 +251,7 @@ describe('useImageUpload', () => {
 
       const file = new File(['test'], 'test.png', { type: 'image/png' });
 
-      (chatImageUploadService.uploadImages as any).mockResolvedValue({
+      vi.mocked(chatImageUploadService.uploadImages).mockResolvedValue({
         success: false,
         error: 'S3 upload failed'
       });
@@ -265,10 +273,9 @@ describe('useImageUpload', () => {
       const file1 = new File(['test1'], 'test1.png', { type: 'image/png' });
       const file2 = new File(['test2'], 'test2.png', { type: 'image/png' });
 
-      (chatImageUploadService.uploadImages as any).mockResolvedValue({
-        success: true,
-        images: [{ url: 'https://s3.example.com/image.png' }]
-      });
+      vi.mocked(chatImageUploadService.uploadImages).mockResolvedValue(
+        mockUploadOk('https://s3.example.com/image.png'),
+      );
 
       // Ajouter 2 images
       await act(async () => {
@@ -292,10 +299,9 @@ describe('useImageUpload', () => {
 
       const file = new File(['test'], 'test.png', { type: 'image/png' });
 
-      (chatImageUploadService.uploadImages as any).mockResolvedValue({
-        success: true,
-        images: [{ url: 'https://s3.example.com/image.png' }]
-      });
+      vi.mocked(chatImageUploadService.uploadImages).mockResolvedValue(
+        mockUploadOk('https://s3.example.com/image.png'),
+      );
 
       await act(async () => {
         await result.current.processAndUploadImage(file);

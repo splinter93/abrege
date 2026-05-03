@@ -13,6 +13,14 @@ const __dirname = path.dirname(__filename);
 export default tseslint.config(
   {
     ignores: [
+      ".next/**",
+      "coverage/**",
+      "build/**",
+      "www/**",
+      "android/**",
+      "node_modules/**",
+      "dist/**",
+      "backup/**",
       "src/utils/v2DatabaseUtils.ts",
       "src/services/agentApiV2Tools.ts",
       "src/components/EditorToolbar.tsx",

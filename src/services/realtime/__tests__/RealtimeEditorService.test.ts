@@ -179,7 +179,7 @@ describe('[RealtimeEditorService] Service', () => {
       
       // Mock connected state
       const state = service.getState();
-      (state as any).isConnected = true;
+      (state as { isConnected: boolean }).isConnected = true;
       
       await expect(
         service.broadcast('test-event', { data: 'test' })
@@ -191,7 +191,7 @@ describe('[RealtimeEditorService] Service', () => {
       
       // Mock disconnected state
       const state = service.getState();
-      (state as any).isConnected = false;
+      (state as { isConnected: boolean }).isConnected = false;
       
       await expect(
         service.broadcast('test-event', { data: 'test' })

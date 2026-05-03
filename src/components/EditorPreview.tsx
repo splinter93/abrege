@@ -70,11 +70,9 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, heade
           }
           
           try {
-            await initializeMermaid({ 
-              flowchart: { 
-                htmlLabels: false
-              } as any 
-            });
+            await initializeMermaid({
+              flowchart: { htmlLabels: false },
+            } as Parameters<typeof initializeMermaid>[0]);
             const mermaid = await import('mermaid');
             
             const normalizedContent = normalizeMermaidContent(mermaidContent);

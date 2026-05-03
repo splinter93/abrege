@@ -202,8 +202,12 @@ describe('useChatSend', () => {
       expect(messageContent.length).toBeGreaterThan(0);
       
       // Vérifier qu'il y a du texte et des images
-      const hasText = messageContent.some((part: any) => part.type === 'text');
-      const hasImage = messageContent.some((part: any) => part.type === 'image_url');
+      const hasText = messageContent.some(
+        (part: { type?: string }) => part.type === 'text',
+      );
+      const hasImage = messageContent.some(
+        (part: { type?: string }) => part.type === 'image_url',
+      );
       
       expect(hasText).toBe(true);
       expect(hasImage).toBe(true);

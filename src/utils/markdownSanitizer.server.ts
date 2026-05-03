@@ -26,7 +26,7 @@ import { logApi } from './logger';
  * ```ts
  * const unsafe = '# Title\n<script>alert("XSS")</script>';
  * const safe = sanitizeMarkdownContent(unsafe);
- * // Résultat : '# Title\n&lt;script&gt;alert("XSS")&lt;/script&gt;'
+ * // Résultat : '# Title\n&lt;script&gt;alert("XSS")&lt;/script&gt;' (guillemets non échappés volontairement)
  * ```
  */
 export function sanitizeMarkdownContent(content: string): string {

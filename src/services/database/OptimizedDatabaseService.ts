@@ -319,9 +319,12 @@ export class OptimizedDatabaseService {
         return null;
       }
 
+      const noteRow = note as unknown as NoteDetailed & {
+        content_size?: number | null;
+      };
       const typedNote: NoteDetailed = {
         ...(note as unknown as NoteDetailed),
-        content_size: (note as any)?.content_size ?? 0,
+        content_size: noteRow.content_size ?? 0,
       };
 
       // 3. Mettre en cache

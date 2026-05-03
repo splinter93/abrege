@@ -16,7 +16,7 @@ type RedisClientType = {
   setEx?: (key: string, ttl: number, value: string) => Promise<void>;
   del: (key: string) => Promise<number>;
   keys: (pattern: string) => Promise<string[]>;
-  on?: (event: 'error' | 'connect' | 'disconnect' | string, listener: (...args: any[]) => void) => void;
+  on?: (event: 'error' | 'connect' | 'disconnect' | string, listener: (...args: unknown[]) => void) => void;
   flushDb?: () => Promise<void>;
   quit?: () => Promise<void>;
 } | null;

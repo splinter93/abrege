@@ -8,6 +8,15 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { XAIVoiceService } from '../xaiVoiceService';
 import type { XAIVoiceCallbacks, XAIVoiceMessage } from '../types';
 
+/** Accès test-only au socket (propriété privée sur XAIVoiceService). */
+function getPrivateWebSocketMock(service: XAIVoiceService): MockWebSocket {
+  const ws = (service as unknown as { ws: MockWebSocket | null }).ws;
+  if (!ws) {
+    throw new Error('[test] expected WebSocket mock on service');
+  }
+  return ws;
+}
+
 // Mock logger
 vi.mock('@/utils/logger', () => ({
   logger: {
@@ -119,7 +128,7 @@ describe('XAIVoiceService - inFlight Guard', () => {
       await service.connect('test-token', callbacks);
       await new Promise(resolve => setTimeout(resolve, 10)); // Attendre connexion
       
-      mockWs = (service as any).ws as MockWebSocket;
+      mockWs = getPrivateWebSocketMock(service);
       mockWs.reset();
 
       // Simuler commitAudio() → inFlight = true
@@ -145,7 +154,7 @@ describe('XAIVoiceService - inFlight Guard', () => {
       await service.connect('test-token', callbacks);
       await new Promise(resolve => setTimeout(resolve, 10));
       
-      mockWs = (service as any).ws as MockWebSocket;
+      mockWs = getPrivateWebSocketMock(service);
       mockWs.reset();
 
       let disconnectExecuted = false;
@@ -185,7 +194,7 @@ describe('XAIVoiceService - inFlight Guard', () => {
       await service.connect('test-token', callbacks);
       vi.advanceTimersByTime(10); // Simuler délai connexion
       
-      mockWs = (service as any).ws as MockWebSocket;
+      mockWs = getPrivateWebSocketMock(service);
       mockWs.reset();
 
       let disconnectExecuted = false;
@@ -244,7 +253,7 @@ describe('XAIVoiceService - Reconnexion et Cleanup', () => {
       await service.connect('test-token', callbacks);
       vi.advanceTimersByTime(10); // Simuler délai connexion
       
-      mockWs = (service as any).ws as MockWebSocket;
+      mockWs = getPrivateWebSocketMock(service);
       
       // Vérifier que connexion est active (idleTimeout est démarré dans onopen)
       const stateBefore = service.getState();
@@ -278,7 +287,7 @@ describe('XAIVoiceService - Reconnexion et Cleanup', () => {
       await service.connect('test-token', callbacks);
       vi.advanceTimersByTime(10); // Simuler délai connexion
       
-      mockWs = (service as any).ws as MockWebSocket;
+      mockWs = getPrivateWebSocketMock(service);
       mockWs.reset();
 
       // Act : Avancer de 15.1s (timeout idle)
@@ -302,7 +311,7 @@ describe('XAIVoiceService - Reconnexion et Cleanup', () => {
       await service.connect('test-token', callbacks);
       vi.advanceTimersByTime(10); // Simuler délai connexion
       
-      mockWs = (service as any).ws as MockWebSocket;
+      mockWs = getPrivateWebSocketMock(service);
       mockWs.reset();
 
       // Act : Avancer de 10s, puis simuler activité (sendAudio met à jour lastActivity)

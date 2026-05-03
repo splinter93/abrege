@@ -34,15 +34,16 @@ describe('chatMessageMapper', () => {
     });
 
     it('devrait extraire le texte d\'un message multi-modal', () => {
-      const frontendMsg: FrontendChatMessage = {
+      // Contenu tableau (OpenAI / vision) : le mapper le gère ; le type ChatMessage est string-only côté UI.
+      const frontendMsg = {
         id: 'test-2',
-        role: 'user',
+        role: 'user' as const,
         content: [
           { type: 'text', text: 'Décris cette image' },
-          { type: 'image_url', image_url: { url: 'data:image/png;base64,...' } }
-        ] as any, // Multi-modal content
-        timestamp: '2025-01-01T00:00:00.000Z'
-      };
+          { type: 'image_url', image_url: { url: 'data:image/png;base64,...' } },
+        ],
+        timestamp: '2025-01-01T00:00:00.000Z',
+      } as unknown as FrontendChatMessage;
 
       const result = frontendToBackend(frontendMsg);
 
@@ -103,7 +104,7 @@ describe('chatMessageMapper', () => {
           { id: 'note-2', slug: 'mention', title: 'Mention' }
         ],
         timestamp: '2025-01-01T00:00:00.000Z'
-      } as any;
+      };
 
       const result = frontendToBackend(frontendMsg);
 

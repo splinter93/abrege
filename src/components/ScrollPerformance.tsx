@@ -51,7 +51,7 @@ export default function ScrollPerformance() {
     };
 
     // Passive listener pour performance
-    window.addEventListener('scroll', handleScrollStart, { passive: true } as any);
+    window.addEventListener('scroll', handleScrollStart, { passive: true } satisfies AddEventListenerOptions);
 
     return () => {
       if (scrollTimeout) {

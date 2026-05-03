@@ -22,6 +22,13 @@ export interface SlashMenuOptions {
   suggestion: Omit<SuggestionOptions, 'editor'>;
 }
 
+/** Ref exposée par ReactRenderer pour le menu slash (API TipTap / React). */
+interface SlashMenuRendererWithKeyDown {
+  ref?: {
+    onKeyDown?: (props: { event: KeyboardEvent }) => boolean;
+  };
+}
+
 const SlashMenuExtension = Extension.create({
   name: 'slashMenu',
 
@@ -104,7 +111,7 @@ const SlashMenuExtension = Extension.create({
                 return true;
               }
 
-              const handler = (component as any)?.ref?.onKeyDown;
+              const handler = (component as SlashMenuRendererWithKeyDown).ref?.onKeyDown;
               return handler ? handler(props) : false;
             },
 

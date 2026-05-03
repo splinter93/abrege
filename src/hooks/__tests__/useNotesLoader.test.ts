@@ -5,6 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Mock } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useNotesLoader, type SelectedNote } from '../useNotesLoader';
 
@@ -24,7 +25,7 @@ describe('useNotesLoader', () => {
       ];
 
       // Mock: 1 note rapide, 1 note lente (2s)
-      (global.fetch as any).mockImplementation((url: string) => {
+      (global.fetch as Mock).mockImplementation((url: string) => {
         if (url.includes('note-1')) {
           return Promise.resolve({
             ok: true,
@@ -66,7 +67,7 @@ describe('useNotesLoader', () => {
         { id: 'note-1', slug: 'note-1', title: 'Note 1' }
       ];
 
-      (global.fetch as any).mockResolvedValue({
+      (global.fetch as Mock).mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({
           note: { id: 'note-1', slug: 'note-1', title: 'Note 1', markdown_content: 'Content 1' }
@@ -97,7 +98,7 @@ describe('useNotesLoader', () => {
       ];
 
       // Mock réponse lente (200ms)
-      (global.fetch as any).mockImplementation(() => 
+      (global.fetch as Mock).mockImplementation(() => 
         new Promise(resolve => 
           setTimeout(() => resolve({
             ok: true,
@@ -130,7 +131,7 @@ describe('useNotesLoader', () => {
         { id: 'note-1', slug: 'note-1', title: 'Note 1' }
       ];
 
-      (global.fetch as any).mockResolvedValue({
+      (global.fetch as Mock).mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({
           note: { id: 'note-1', slug: 'note-1', title: 'Note 1', markdown_content: 'Content 1' }
@@ -151,7 +152,7 @@ describe('useNotesLoader', () => {
     it('should NOT deduplicate different notes', async () => {
       const { result } = renderHook(() => useNotesLoader());
 
-      (global.fetch as any).mockResolvedValue({
+      (global.fetch as Mock).mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({
           note: { markdown_content: 'Content' }
@@ -181,7 +182,7 @@ describe('useNotesLoader', () => {
       ];
 
       // note-1 OK, note-2 error
-      (global.fetch as any).mockImplementation((url: string) => {
+      (global.fetch as Mock).mockImplementation((url: string) => {
         if (url.includes('note-1')) {
           return Promise.resolve({
             ok: true,
@@ -216,7 +217,7 @@ describe('useNotesLoader', () => {
         { id: 'note-1', slug: 'note-1', title: 'Note 1' }
       ];
 
-      (global.fetch as any).mockResolvedValue({
+      (global.fetch as Mock).mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({
           note: { id: 'note-1', slug: 'note-1', title: 'Note 1' } // Pas de markdown_content
@@ -240,7 +241,7 @@ describe('useNotesLoader', () => {
         { id: 'note-1', slug: 'note-1', title: 'Note 1' }
       ];
 
-      (global.fetch as any).mockRejectedValue(new Error('Network error'));
+      (global.fetch as Mock).mockRejectedValue(new Error('Network error'));
 
       let loadResult: Awaited<ReturnType<ReturnType<typeof useNotesLoader>['loadNotes']>> | undefined;
       await act(async () => {
@@ -281,7 +282,7 @@ describe('useNotesLoader', () => {
         { id: 'note-1', slug: 'note-1', title: 'Note 1' }
       ];
 
-      (global.fetch as any).mockImplementation(() => 
+      (global.fetch as Mock).mockImplementation(() => 
         new Promise(resolve => 
           setTimeout(() => resolve({
             ok: true,

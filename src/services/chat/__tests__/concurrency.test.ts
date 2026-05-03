@@ -14,6 +14,7 @@ process.env.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ||
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { HistoryManager } from '../HistoryManager';
+import type { ChatMessage } from '@/types/chat';
 
 // Mock Supabase pour tests unitaires
 vi.mock('@/utils/supabaseClient', () => {
@@ -70,7 +71,7 @@ describe('[Concurrency] Chat Messages', () => {
         timestamp: new Date().toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      } as any;
+      } as ChatMessage;
     });
   });
 

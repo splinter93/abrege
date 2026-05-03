@@ -28,6 +28,18 @@ import YouTubeEmbedExtension from '@/extensions/YouTubeEmbedExtension';
 import SidebarFileDropExtension from '@/extensions/SidebarFileDropExtension';
 import ParagraphBreakNormalizer from '@/extensions/ParagraphBreakNormalizer';
 
+/** Détecte NotionDragHandle si l'extension TipTap expose `type.name` (API interne non exportée). */
+function extensionMatchesNotionDragHandle(ext: unknown): boolean {
+  if (typeof ext !== 'object' || ext === null) return false;
+  const record = ext as Record<string, unknown>;
+  if (record.name === 'notionDragHandle') return true;
+  const nestedType = record.type;
+  if (typeof nestedType === 'object' && nestedType !== null && 'name' in nestedType) {
+    return (nestedType as { name?: unknown }).name === 'notionDragHandle';
+  }
+  return false;
+}
+
 // ⚠️ EXTENSIONS PROBLÉMATIQUES RETIRÉES (non liées aux drag handles):
 // - BoxSelectionExtension: Causait des problèmes de sélection
 // - SelectionExtension: Causait des problèmes de sélection
@@ -297,10 +309,8 @@ export function createEditorExtensions(
 
   // ✅ DRAG HANDLE Notion-style ajouté UNIQUEMENT si pas déjà en mode PROGRESSIF
   // Mode PROGRESSIF (lignes 74-183) ajoute déjà NotionDragHandleExtension
-  const hasNotionDragHandle = extensions.some(ext => 
-    ext.name === 'notionDragHandle' || 
-    // ⚠️ any acceptable: TipTap Extension type non exporté, pas d'alternative
-    (ext as any).type?.name === 'notionDragHandle'
+  const hasNotionDragHandle = extensions.some(
+    ext => ext.name === 'notionDragHandle' || extensionMatchesNotionDragHandle(ext),
   );
   
   if (!hasNotionDragHandle) {
