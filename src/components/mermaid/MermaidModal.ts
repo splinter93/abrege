@@ -143,7 +143,7 @@ export function openMermaidModal(mermaidContent: string) {
   closeButton.className = 'mermaid-modal-close';
   closeButton.title = 'Fermer (Échap)';
   closeButton.innerHTML = `
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <line x1="18" y1="6" x2="6" y2="18"></line>
       <line x1="6" y1="6" x2="18" y2="18"></line>
     </svg>
@@ -384,10 +384,7 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
     if (result && result.svg) {
       // Créer le conteneur SVG pour le diagramme agrandi
       const svgContainer = document.createElement('div');
-      svgContainer.style.cssText = `
-        width: 100%;
-        height: 100%;
-      `;
+      svgContainer.className = 'mermaid-modal-svg-inner';
       svgContainer.innerHTML = result.svg;
       
       // ✅ Forcer la font sur le SVG après injection

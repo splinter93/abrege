@@ -1,4 +1,4 @@
-/* Fichier CSS pour la modal Mermaid sans container */
+/* Fichier CSS pour la modal Mermaid — barre d’outils alignée sur ImageModal */
 
 /* Styles pour la modal Mermaid agrandie - sans container */
 .mermaid-modal {
@@ -7,16 +7,16 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: var(--chat-bg-primary); /* ✅ Background opaque du chat */
-  backdrop-filter: none; /* ✅ Pas de blur */
+  background: var(--chat-bg-primary);
+  backdrop-filter: none;
   -webkit-backdrop-filter: none;
   z-index: 999999;
   display: flex;
   flex-direction: column;
   cursor: pointer;
-  overflow: hidden; /* Pas de scrollbar */
-  padding: 60px 20px 20px 20px;
-  animation: modalFadeIn 0.3s ease-out;
+  overflow: hidden;
+  padding: calc(60px + env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 20px)) max(20px, env(safe-area-inset-bottom, 20px)) max(20px, env(safe-area-inset-left, 20px));
+  animation: modalFadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes modalFadeIn {
@@ -28,13 +28,15 @@
   }
 }
 
-/* Barre transparente en haut de l'écran sans bordure */
+/* Barre en haut : même recette que .image-modal-toolbar */
 .mermaid-modal-toolbar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 60px;
+  box-sizing: border-box;
+  height: calc(60px + env(safe-area-inset-top, 0px));
+  padding: env(safe-area-inset-top, 0px) max(20px, env(safe-area-inset-left, 0px)) 0 max(20px, env(safe-area-inset-right, 0px));
   background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -42,12 +44,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
   z-index: 1000000;
   cursor: default;
 }
 
-/* Type de diagramme à gauche */
+/* Type de diagramme à gauche — typo comme .image-modal-filename-label */
 .mermaid-modal-type {
   color: rgba(255, 255, 255, 0.9);
   font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -56,35 +57,48 @@
   letter-spacing: 0.5px;
   text-transform: uppercase;
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* Boutons de zoom à gauche du bouton copier */
+/* Pilule zoom centrée — comme .image-modal-zoom-controls */
 .mermaid-modal-zoom-controls {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-right: 16px;
+  gap: 0;
+  margin-right: 0;
+  padding: 1px 2px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
 }
 
 .mermaid-modal-zoom-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 36px;
   background: transparent;
   border: none;
   outline: none;
   color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
   transition: all 0.2s ease;
-  border-radius: 8px; /* ✅ Cohérent avec boutons header chat */
+  border-radius: 0;
 }
 
 .mermaid-modal-zoom-btn:hover {
   color: rgba(255, 255, 255, 1);
   transform: scale(1.1);
-  background: transparent !important; /* ✅ Pas de background arrondi */
 }
 
 .mermaid-modal-zoom-btn:active {
@@ -103,7 +117,7 @@
   flex-shrink: 0;
 }
 
-/* Bouton copier au centre - juste l'icône */
+/* Bouton copier — comme .image-modal-copy */
 .mermaid-modal-copy {
   display: flex;
   align-items: center;
@@ -116,14 +130,12 @@
   color: rgba(255, 255, 255, 0.9);
   cursor: pointer;
   transition: all 0.2s ease;
-  margin: 0 16px;
-  border-radius: 8px; /* ✅ Cohérent avec boutons header chat */
+  flex-shrink: 0;
 }
 
 .mermaid-modal-copy:hover {
   color: rgba(255, 255, 255, 1);
   transform: scale(1.1);
-  background: transparent !important; /* ✅ Pas de background arrondi */
 }
 
 .mermaid-modal-copy:active {
@@ -141,8 +153,8 @@
 }
 
 .mermaid-modal-copy svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
   display: block;
 }
@@ -153,7 +165,7 @@
   height: 13px !important;
 }
 
-/* Bouton de fermeture intégré dans la toolbar - juste l'icône */
+/* Bouton fermer — comme .image-modal-close */
 .mermaid-modal-close {
   width: 44px;
   height: 44px;
@@ -167,13 +179,11 @@
   justify-content: center;
   transition: all 0.2s ease;
   flex-shrink: 0;
-  border-radius: 8px; /* ✅ Cohérent avec boutons header chat */
 }
 
 .mermaid-modal-close:hover {
   color: rgba(255, 255, 255, 1);
   transform: scale(1.1);
-  background: transparent !important; /* ✅ Pas de background arrondi */
 }
 
 .mermaid-modal-close:active {
@@ -187,8 +197,9 @@
 }
 
 .mermaid-modal-close svg {
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
 }
 
 /* Wrapper SVG avec zoom et pan - centré dans la modal */
@@ -208,6 +219,17 @@
   cursor: grabbing !important;
 }
 
+/* Conteneur interne : le SVG est plus petit que la zone ; flex centre réellement le diagramme */
+.mermaid-modal-svg-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
 /* Styles pour le contenu SVG dans la modal */
 .mermaid-modal svg {
   max-width: 95%;
@@ -218,15 +240,19 @@
   margin: 0 auto;
 }
 
-/* Responsive design */
+/* Responsive — aligné sur ImageModal */
 @media (max-width: 768px) {
   .mermaid-modal {
-    padding: 0 10px 10px 10px;
+    padding-top: calc(60px + env(safe-area-inset-top, 0px));
+    padding-right: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
   }
   
   .mermaid-modal-toolbar {
-    padding: 16px 0;
     max-width: calc(100vw - 20px);
+    padding-left: max(10px, env(safe-area-inset-left, 0px));
+    padding-right: max(10px, env(safe-area-inset-right, 0px));
   }
   
   .mermaid-modal-type {
@@ -234,13 +260,12 @@
   }
   
   .mermaid-modal-zoom-controls {
-    gap: 6px;
-    margin-right: 12px;
+    padding: 3px;
   }
   
   .mermaid-modal-zoom-btn {
     width: 36px;
-    height: 36px;
+    height: 30px;
   }
   
   .mermaid-modal-zoom-btn svg {
@@ -251,7 +276,6 @@
   .mermaid-modal-copy {
     width: 36px;
     height: 36px;
-    margin: 0 12px;
   }
   
   .mermaid-modal-copy svg {
@@ -265,8 +289,8 @@
   }
   
   .mermaid-modal-close svg {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
   }
   
   .mermaid-modal svg {
@@ -277,12 +301,16 @@
 
 @media (max-width: 480px) {
   .mermaid-modal {
-    padding: 0 8px 8px 8px;
+    padding-top: calc(60px + env(safe-area-inset-top, 0px));
+    padding-right: 8px;
+    padding-bottom: 8px;
+    padding-left: 8px;
   }
   
   .mermaid-modal-toolbar {
-    padding: 12px 0;
     max-width: calc(100vw - 16px);
+    padding-left: max(8px, env(safe-area-inset-left, 0px));
+    padding-right: max(8px, env(safe-area-inset-right, 0px));
   }
   
   .mermaid-modal-type {
@@ -290,13 +318,12 @@
   }
   
   .mermaid-modal-zoom-controls {
-    gap: 4px;
-    margin-right: 8px;
+    padding: 2px;
   }
   
   .mermaid-modal-zoom-btn {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 28px;
   }
   
   .mermaid-modal-zoom-btn svg {
@@ -307,7 +334,6 @@
   .mermaid-modal-copy {
     width: 32px;
     height: 32px;
-    margin: 0 8px;
   }
   
   .mermaid-modal-copy svg {
@@ -321,7 +347,7 @@
   }
   
   .mermaid-modal-close svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
 }
