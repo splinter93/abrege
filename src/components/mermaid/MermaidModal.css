@@ -122,8 +122,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   background: transparent;
   border: none;
   outline: none;
@@ -153,22 +153,22 @@
 }
 
 .mermaid-modal-copy svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
   display: block;
 }
 
 /* ✅ CRITIQUE: Forcer dimensions rect (éviter forme ronde) */
 .mermaid-modal-copy svg rect {
-  width: 13px !important;
-  height: 13px !important;
+  width: 12px !important;
+  height: 12px !important;
 }
 
 /* Bouton fermer — comme .image-modal-close */
 .mermaid-modal-close {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   background: transparent;
   border: none;
   outline: none;
@@ -197,8 +197,8 @@
 }
 
 .mermaid-modal-close svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
 }
 
@@ -274,23 +274,28 @@
   }
   
   .mermaid-modal-copy {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
   }
   
   .mermaid-modal-copy svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .mermaid-modal-copy svg rect {
+    width: 10px !important;
+    height: 10px !important;
   }
   
   .mermaid-modal-close {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
   }
   
   .mermaid-modal-close svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
   
   .mermaid-modal svg {
@@ -332,22 +337,27 @@
   }
   
   .mermaid-modal-copy {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
   
   .mermaid-modal-copy svg {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
+  }
+
+  .mermaid-modal-copy svg rect {
+    width: 9px !important;
+    height: 9px !important;
   }
   
   .mermaid-modal-close {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
   
   .mermaid-modal-close svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
   }
 }

@@ -131,8 +131,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   background: transparent;
   border: none;
   outline: none;
@@ -162,8 +162,8 @@
 }
 
 .image-modal-copy svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
 }
 
@@ -172,8 +172,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   background: transparent;
   border: none;
   outline: none;
@@ -203,15 +203,15 @@
 }
 
 .image-modal-download svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
 }
 
 /* Bouton de fermeture - aligné avec les autres */
 .image-modal-close {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   background: transparent;
   border: none;
   outline: none;
@@ -240,8 +240,8 @@
 }
 
 .image-modal-close svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
 }
 
@@ -310,33 +310,33 @@
   }
   
   .image-modal-copy {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
   }
   
   .image-modal-copy svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
   }
   
   .image-modal-download {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
   }
   
   .image-modal-download svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
   }
   
   .image-modal-close {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
   }
   
   .image-modal-close svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
   
   .image-modal-img {
@@ -378,32 +378,32 @@
   }
   
   .image-modal-copy {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
   
   .image-modal-copy svg {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
   }
   
   .image-modal-download {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
   
   .image-modal-download svg {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
   }
   
   .image-modal-close {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
   
   .image-modal-close svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
   }
 }
