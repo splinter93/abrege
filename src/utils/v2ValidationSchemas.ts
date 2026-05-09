@@ -24,9 +24,17 @@ export const createNoteV2Schema = z.object({
   /** Contenu markdown. Accepte aussi l'alias `content` pour compatibilité (ex. clients qui envoient "content"). */
   markdown_content: z.string().optional().default(''),
   content: z.string().optional(),
-  header_image: z.string().url('header_image doit être une URL valide').optional(),
+  /** Chaîne vide ou absent : pas d’image (les LLM envoient souvent ""). */
+  header_image: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? undefined : val),
+    z.string().url('header_image doit être une URL valide').optional()
+  ),
+  /** Racine du classeur : null. Les LLM envoient parfois la chaîne "null" au lieu de JSON null. */
   folder_id: z.preprocess(
-    (val) => (val === '' ? null : val),
+    (val) =>
+      val === '' || val === 'null' || val === 'undefined' || val === null || val === undefined
+        ? null
+        : val,
     z.union([z.string().uuid('folder_id doit être un UUID valide'), z.null()]).optional()
   ),
   is_canva_draft: z.boolean().optional().default(false),

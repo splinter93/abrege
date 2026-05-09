@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "API V2 Abrège - Complète",
-    "description": "API V2 moderne et robuste pour la gestion de notes, classeurs, dossiers et agents spécialisés avec support LLM. Authentification par clé API uniquement.",
+    "description": "API V2 moderne et robuste pour la gestion de notes, classeurs, dossiers et agents spécialisés avec support LLM. Authentification par clé API uniquement.\n\n**Conventions pour clients automatisés, outils et LLM (évite les 422 inutiles)**\n- **Types JSON** : `null` en JSON est la valeur nulle (sans guillemets). Ne jamais envoyer la **chaîne** `\"null\"` ni `\"undefined\"` à la place d’un UUID ou d’une absence de valeur — ce ne sont pas des UUID valides.\n- **Champs optionnels « vides »** : pour « pas d’image d’en-tête » ou « pas de dossier », **omettre** le champ ou utiliser `null` JSON. Une chaîne vide `\"\"` pour une URL ou un identifiant est **invalide** et provoque une erreur de validation.\n- **URLs (`header_image`, etc.)** : si aucune image, **ne pas inclure** `header_image` dans le corps. Une URL doit être absolue (`https://...`) et conforme au format URI.\n- **UUID** : les champs `folder_id`, `target_folder_id`, etc. attendent un UUID v4 (format `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`) ou `null` / omission selon le endpoint — pas de texte libre.\n\n**Édition du markdown (agents / LLM) — flux recommandé**\n1. **Table des matières** : appeler **getNoteTOC** (`GET /note/{ref}/table-of-contents`) **avant** de cibler une section par slug, sauf si la réponse TOC (avec slugs exacts) est déjà dans le même tour de dialogue.\n2. **Édition par section** : **editNoteSection** (`POST /note/{ref}/sections:edit`) — le champ `section_slug` doit être la valeur **slug** renvoyée par getNoteTOC (titres dédupliqués → slugs du type `foo`, `foo-1`).\n3. **Édition par opérations** : **applyContentOperations** (`POST /note/{ref}/content:apply`) — si `target.type` = `heading`, fournir `target.heading.heading_id` = slug TOC, **ou** un `path` cohérent ; au moins l’un des deux. Le champ `where` est **optionnel** (validation Zod). `ops` : 1 à 50 opérations.\n4. **Titre** : ne pas ajouter de `# …` H1 dans le markdown ; le titre affiché est `source_title`.",
     "version": "2.0.0",
     "contact": {
       "name": "Support Abrège",
@@ -30,7 +30,7 @@
       "get": {
         "operationId": "getNote",
         "summary": "Récupérer une note ou une section",
-        "description": "Récupère une note par son ID ou slug. Avec le paramètre fields (all, content, metadata) on contrôle les champs retournés. Avec le paramètre section (slug ou titre), on retourne uniquement le contenu de cette section (heading_line, body, char_count) — utile pour les agents qui veulent lire une section précise avant de l'éditer. Sans section, la note complète est retournée.",
+        "description": "Récupère une note par ID ou slug. **fields** : all | content | metadata. **section** : filtre sur une section par **slug** (idéalement le `slug` issu de **getNoteTOC**) ou titre — retourne `section` avec body, char_count, etc. Sans `section`, note complète. **Lire avant d’éditer** : pour connaître les slugs fiables, utiliser **getNoteTOC** ; le paramètre `section` ici doit correspondre à un slug valide pour éviter 404.",
         "tags": [
           "Notes"
         ],
@@ -175,7 +175,7 @@
       "post": {
         "operationId": "createNote",
         "summary": "Créer une nouvelle note",
-        "description": "Créer une note dans un classeur. Ne pas inclure de H1 dans le contenu : source_title sert de titre. notebook_id optionnel : si vide/null, la note va dans le classeur Quicknotes (par défaut). folder_id optionnel : vide ou null = racine du classeur ; si folder_id est rempli sans notebook_id, la note est créée dans ce dossier (classeur déduit).",
+        "description": "Créer une note dans un classeur. Ne pas inclure de H1 dans le contenu : `source_title` sert de titre.\n\n**Comportement** : `notebook_id` optionnel — omis, chaîne vide ou `null` JSON → classeur Quicknotes (défaut). `folder_id` optionnel — `null` JSON ou champ omis → note à la **racine** du classeur cible ; si `folder_id` est un UUID valide sans `notebook_id`, le classeur est déduit du dossier.\n\n**Agents (erreurs fréquentes à éviter)** : ne pas envoyer `\"folder_id\": \"null\"` (chaîne) — utiliser `\"folder_id\": null` ou retirer la clé. Ne pas envoyer `\"header_image\": \"\"` — retirer la clé s’il n’y a pas d’URL d’image.",
         "tags": [
           "Notes"
         ],
@@ -199,23 +199,27 @@
                   },
                   "notebook_id": {
                     "type": "string",
-                    "description": "ID du classeur (UUID ou slug). Optionnel : si vide ou null, la note est créée dans le classeur Quicknotes (par défaut)."
+                    "description": "Classeur cible : **UUID ou slug** du classeur (notebook). Optionnel : si omis, chaîne vide ou `null` JSON → création dans le classeur **Quicknotes** (défaut). Ne pas envoyer la chaîne littérale `\"null\"` comme identifiant."
                   },
                   "markdown_content": {
                     "type": "string",
                     "default": "",
                     "description": "Contenu markdown de la note (pas de H1 : le titre est source_title)"
                   },
+                  "content": {
+                    "type": "string",
+                    "description": "Alias optionnel accepté par l’API au même titre que `markdown_content` (le schéma Zod fusionne les deux ; ne pas dupliquer les deux avec des textes différents)."
+                  },
                   "folder_id": {
                     "type": "string",
                     "format": "uuid",
                     "nullable": true,
-                    "description": "ID du dossier parent (UUID). Vide ou null = note à la racine du classeur. Si rempli sans notebook_id, la note est créée dans ce dossier (classeur déduit automatiquement)."
+                    "description": "Dossier parent : **UUID** du dossier. Pour une note à la **racine** du classeur : utiliser `null` en JSON ou **omettre** ce champ. **Interdit** : la chaîne `\"null\"` (ce n’est pas un UUID) — provoque 422."
                   },
                   "header_image": {
                     "type": "string",
                     "format": "uri",
-                    "description": "URL de l'image d'en-tête (optionnel)"
+                    "description": "URL absolue de l’image d’en-tête (https://…). **Si aucune image** : omettre ce champ entièrement. Ne pas envoyer une chaîne de longueur zéro pour ce champ — provoque 422 (une chaîne vide n’est pas une URI valide)."
                   },
                   "is_canva_draft": {
                     "type": "boolean",
@@ -236,6 +240,13 @@
                 "required": [
                   "source_title"
                 ]
+              },
+              "example": {
+                "source_title": "Mon titre de note",
+                "notebook_id": "ecb30f8f-dce7-4a48-9ffd-88985ff57d3f",
+                "markdown_content": "## Section\n\nContenu…",
+                "folder_id": null,
+                "source_type": "markdown"
               }
             }
           }
@@ -264,7 +275,7 @@
             }
           },
           "422": {
-            "description": "Payload invalide : champs incorrects ou types invalides (voir details[].field et details[].message)",
+            "description": "Payload invalide : champs incorrects ou types invalides (voir details[].field et details[].message). Fréquent pour les agents : chaîne \"null\" à la place d’un UUID, ou header_image=\"\" au lieu d’omettre le champ.",
             "content": {
               "application/json": {
                 "schema": {
@@ -280,7 +291,7 @@
       "put": {
         "operationId": "updateNote",
         "summary": "Mettre à jour une note",
-        "description": "Met à jour les métadonnées et/ou le contenu d'une note. Utiliser markdown_content pour le corps (pas de H1 : source_title est le titre).",
+        "description": "Met à jour les métadonnées et/ou le contenu d'une note. Utiliser `markdown_content` pour le corps (pas de H1 : `source_title` est le titre).\n\n**Agents** : pour retirer l’image d’en-tête, envoyer `header_image: null` (JSON), pas une chaîne vide. Pour `folder_id`, utiliser un UUID valide, `null`, ou omettre — jamais la chaîne `\"null\"`.",
         "tags": [
           "Notes"
         ],
@@ -324,25 +335,30 @@
                   "header_image": {
                     "type": "string",
                     "format": "uri",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "URL absolue de l’image d’en-tête. Pour **supprimer** l’image : `null` JSON. Pour **modifier** : URL complète. Éviter `\"\"` (chaîne vide) — préférer `null` pour effacer."
                   },
                   "header_image_offset": {
                     "type": "number",
                     "minimum": 0,
-                    "maximum": 100
+                    "maximum": 100,
+                    "description": "Position verticale du crop (0–100), optionnel"
                   },
                   "header_image_blur": {
                     "type": "integer",
                     "minimum": 0,
-                    "maximum": 5
+                    "maximum": 5,
+                    "description": "Flou d’arrière-plan (0–5), optionnel"
                   },
                   "header_image_overlay": {
                     "type": "integer",
                     "minimum": 0,
-                    "maximum": 5
+                    "maximum": 5,
+                    "description": "Assombrissement de l’overlay (0–5), optionnel"
                   },
                   "header_title_in_image": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Afficher le titre dans la zone image, optionnel"
                   },
                   "wide_mode": {
                     "type": "boolean"
@@ -363,7 +379,8 @@
                   "folder_id": {
                     "type": "string",
                     "format": "uuid",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Déplacer la note vers un dossier : UUID du dossier, ou `null` / omettre selon logique métier. **Interdit** : chaîne `\"null\"`."
                   },
                   "description": {
                     "type": "string",
@@ -853,7 +870,7 @@
       "post": {
         "operationId": "applyContentOperations",
         "summary": "Appliquer des opérations de contenu",
-        "description": "Endpoint canonique d'édition de contenu. Applique des opérations (insert, replace, delete, upsert_section) avec cibles heading (slug), regex, position ou anchor. Si un canva avec status='open' existe pour cette note, le contenu est streamé progressivement vers le client ; la note est toujours sauvegardée en DB. Cibler les sections par heading_id (slug issu de table-of-contents). En cas d'opération skipped (cible introuvable), ops_results[].available_headings liste les sections disponibles. IMPORTANT: Ne pas inclure de H1 dans le body/content ; source_title sert de H1.",
+        "description": "Édition fine du markdown par **opérations** (alternative à **editNoteSection** pour regex, ancres, positions).\n\n**Avant de cibler une section par titre** : appeler **getNoteTOC** (`GET /note/{ref}/table-of-contents`) et utiliser le champ **slug** comme `target.heading.heading_id` (même source que pour `section_slug` dans sections:edit). Ne pas inventer un slug à partir du libellé du titre.\n\n**Schéma Zod** : chaque opération a `id`, `action`, `target` ; **`where` est optionnel** (défaut implicite selon le cas). Tableaux `ops` : **1 à 50** éléments. `transaction` : `all_or_nothing` | `best_effort` (défaut `all_or_nothing`). `return` : `content` | `diff` | `none` (défaut `diff`).\n\nSi canva ouvert, streaming possible ; la note est persistée en DB. Si cible heading introuvable, la réponse peut inclure `available_headings` pour correction. **Pas de ligne `#` H1 dans le contenu inséré** ; le titre document est `source_title`.",
         "tags": [
           "Notes"
         ],
@@ -901,6 +918,7 @@
                         },
                         "target": {
                           "type": "object",
+                          "description": "Cible de l’opération. Renseigner le sous-objet qui correspond à **type** (heading, regex, position ou anchor) — c’est le discriminant logique côté API.",
                           "properties": {
                             "type": {
                               "type": "string",
@@ -910,27 +928,30 @@
                                 "position",
                                 "anchor"
                               ],
-                              "description": "Type de cible"
+                              "description": "Type de cible : **heading** (slug TOC ou path), **regex**, **position** (offset / début / fin), **anchor** (doc_start, etc.)"
                             },
                             "heading": {
                               "type": "object",
+                              "description": "Présent si target.type = heading. **Validation Zod** : au moins **`path`** (non vide) **ou** **`heading_id`** doit être fourni — pas les deux obligatoires, mais pas aucun.",
                               "properties": {
                                 "path": {
                                   "type": "array",
                                   "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "minLength": 1
                                   },
-                                  "description": "Chemin du heading (ex: [\"API\", \"Endpoints\"])"
+                                  "description": "Chemin hiérarchique des titres (ex. [\"API\", \"Endpoints\"]). Alternative au slug."
                                 },
                                 "level": {
                                   "type": "integer",
                                   "minimum": 1,
                                   "maximum": 6,
-                                  "description": "Niveau du heading (1-6)"
+                                  "description": "Niveau Markdown ATX (1–6), optionnel"
                                 },
                                 "heading_id": {
                                   "type": "string",
-                                  "description": "ID du heading (slug)"
+                                  "minLength": 1,
+                                  "description": "**Slug de section** tel que retourné par **getNoteTOC** (`slug` dans la TOC). C’est l’identifiant stable à privilégier pour les agents."
                                 }
                               }
                             },
@@ -999,7 +1020,7 @@
                             "at",
                             "replace_match"
                           ],
-                          "description": "Position relative à la cible"
+                          "description": "Position relative à la cible. **Optionnel** (schéma Zod). Souvent ignoré pour replace/delete ; défaut implicite pour insert/upsert_section."
                         },
                         "content": {
                           "type": "string",
@@ -1026,8 +1047,7 @@
                       "required": [
                         "id",
                         "action",
-                        "target",
-                        "where"
+                        "target"
                       ]
                     },
                     "minItems": 1,
@@ -1059,12 +1079,7 @@
                       "none"
                     ],
                     "default": "diff",
-                    "description": "Type de retour"
-                  },
-                  "idempotency_key": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "Clé d'idempotence"
+                    "description": "Type de retour : markdown complet, diff, ou rien"
                   }
                 },
                 "required": [
@@ -1301,7 +1316,7 @@
       "post": {
         "operationId": "editNoteSection",
         "summary": "Éditer une note par section (TOC / slug)",
-        "description": "**Workflow obligatoire (agents / LLM) :** avant la moindre édition par section, appeler **GET /note/{ref}/table-of-contents** (operationId **getNoteTOC**) pour obtenir la table des matières et les **slug** officiels. Ne jamais inventer ou déduire un `section_slug` depuis le titre seul — les slugs peuvent être dédupliqués (ex. `foo`, `foo-1`). Ensuite seulement, appeler cet endpoint avec les slugs **exactement** retournés par getNoteTOC (sauf si la TOC complète avec slugs est déjà présente dans le contexte immédiat de la même tâche). Édition structurée TOC-first : préféré à content:apply pour insert/replace/delete/rename par section. Actions : insert_* ajoute du contenu, replace_content remplace le corps en gardant le heading, clear_content vide explicitement le corps en gardant le heading, delete supprime heading + corps, replace_heading renomme le heading, create_section crée une nouvelle section. Si un canva avec status='open' existe pour cette note, le contenu est streamé ; la note est toujours sauvegardée en DB. Pour create_section : fournir heading_title, heading_level, create_placement (at_start | at_end | after_slug) ; si after_slug, cibler une section existante via son slug getNoteTOC. IMPORTANT: Ne pas inclure de H1 dans le body ; source_title sert de H1.",
+        "description": "**Prérequis (LLM / outils)** : appeler **getNoteTOC** (`GET /note/{ref}/table-of-contents`) **avant** la première édition qui cible une section, sauf si la TOC (avec slugs) est déjà dans le contexte du même enchaînement.\n\n**section_slug** : utiliser le champ **slug** renvoyé par getNoteTOC **à l’identique** (titres dupliqués → slugs `foo`, `foo-1`, etc.). Ne pas reconstruire un slug à partir du titre affiché.\n\n**Choix d’outil** : cet endpoint est adapté aux insert/replace/delete/rename **par section**. Pour regex, ancres ou insertions non structurées par slug, utiliser **applyContentOperations** (`content:apply`).\n\n**Actions (validation Zod)** : `insert_*`, `replace_content`, `clear_content`, `replace_heading`, `delete`, `create_section`. `content` requis pour les actions insert/replace listées ; pour `create_section`, fournir `heading_title`, `heading_level`, `create_placement` et si besoin `after_slug`. Body markdown : **pas de ligne `#` H1** ; le titre document est `source_title`.",
         "tags": [
           "Notes"
         ],
@@ -1350,7 +1365,7 @@
                   "content": {
                     "type": "string",
                     "maxLength": 100000,
-                    "description": "Markdown à insérer/remplacer. Requis pour insert_before, insert_after, insert_inside_start, insert_inside_end et replace_content. Pour vider le corps, utiliser clear_content ou replace_content avec content=\"\" explicite. Optionnel pour create_section, interdit inutilement pour delete/clear_content."
+                    "description": "Markdown à insérer ou remplacer. Requis (non vide pour insert_*) pour insert_before, insert_after, insert_inside_start, insert_inside_end et replace_content selon le schéma Zod. Pour vider le corps de section : préférer **clear_content** ; sinon replace_content avec contenu vide explicite. Max 100000 caractères."
                   },
                   "new_heading_title": {
                     "type": "string",
@@ -2016,7 +2031,7 @@
       "post": {
         "operationId": "executeAgent",
         "summary": "Exécuter un agent universel",
-        "description": "Endpoint universel pour exécuter n'importe quel agent spécialisé avec une interface simple",
+        "description": "Exécute un agent (slug ou id). Champs requis : **ref**, **input**. **image** : URL **https** optionnelle (modèles vision). **options** : temperature 0–2, **max_tokens** 1–128000, stream booléen — aligné sur le schéma Zod `executeAgentV2Schema`.",
         "tags": [
           "Agents Spécialisés"
         ],
@@ -2039,8 +2054,14 @@
                   },
                   "input": {
                     "type": "string",
-                    "description": "Message d'entrée pour l'agent",
+                    "minLength": 1,
+                    "description": "Message d'entrée pour l'agent (non vide)",
                     "example": "Analyse cette note"
+                  },
+                  "image": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "URL d’image optionnelle pour les agents / modèles multimodaux (doit être une URI valide si fourni ; sinon omettre le champ)"
                   },
                   "options": {
                     "type": "object",
@@ -2054,8 +2075,8 @@
                       "max_tokens": {
                         "type": "integer",
                         "minimum": 1,
-                        "maximum": 10000,
-                        "description": "Nombre maximum de tokens"
+                        "maximum": 128000,
+                        "description": "Plafond de tokens de sortie (Zod : max 128000)"
                       },
                       "stream": {
                         "type": "boolean",
@@ -2571,7 +2592,7 @@
       "delete": {
         "operationId": "deleteResource",
         "summary": "Suppression unifiée",
-        "description": "Supprime une ressource (note, dossier, classeur, fichier) de manière unifiée",
+        "description": "Supprime une ressource. **resource** (path) : exactement l’une des valeurs **note**, **folder**, **classeur**, **file** (orthographe stricte). **ref** : UUID ou slug de la ressource.",
         "tags": [
           "Utilitaires"
         ],
@@ -2729,7 +2750,8 @@
                   },
                   "resource_id": {
                     "type": "string",
-                    "description": "ID de la ressource à restaurer"
+                    "format": "uuid",
+                    "description": "UUID de l’élément en corbeille à restaurer (validation route : UUID strict)"
                   }
                 },
                 "required": [
@@ -2864,7 +2886,7 @@
       "get": {
         "operationId": "getNoteTOC",
         "summary": "Table des matières d'une note",
-        "description": "Récupère la table des matières (titres H1–H6) avec level, title, slug, line, start. **À appeler systématiquement avant** POST /note/{ref}/sections:edit (tool **editNoteSection**) lorsque les slugs ne sont pas déjà connus : c'est la source de vérité pour les `section_slug` (y compris déduplication). Les slugs servent à cibler une section : GET /note/{ref}?section=<slug> pour lire une section ; pour l'éditer, utiliser sections:edit avec le slug exact retourné ici ; POST /note/{ref}/content:apply avec target.heading.heading_id=<slug> reste disponible pour les cas avancés (regex, ancres, etc.).",
+        "description": "**Source de vérité des slugs de section** pour une note. Retourne pour chaque titre H1–H6 : level, title, **slug**, line, start.\n\n**Quand appeler** : avant **editNoteSection** (`sections:edit`) pour remplir `section_slug` ; avant **applyContentOperations** (`content:apply`) lorsque vous ciblez `target.type=heading` avec `target.heading.heading_id` — réutiliser le même **slug** que dans cette réponse.\n\n**Lecture** : `GET /note/{ref}?section=<slug>` pour le corps d’une section. **Ne pas** déduire le slug à partir du seul titre.",
         "tags": [
           "Notes"
         ],
@@ -3021,7 +3043,7 @@
       "put": {
         "operationId": "moveNote",
         "summary": "Déplacer une note",
-        "description": "Déplace une note vers un autre classeur ou dossier",
+        "description": "Déplace une note vers un autre classeur (`target_notebook_id`) et/ou dossier (`target_folder_id`).\n\n**Agents** : `target_folder_id` doit être un UUID valide ou `null` JSON pour la racine du classeur cible — **pas** la chaîne `\"null\"`. `target_notebook_id` est un UUID de classeur lorsque fourni.",
         "tags": [
           "Notes"
         ],
@@ -3051,11 +3073,13 @@
                   "target_folder_id": {
                     "type": "string",
                     "format": "uuid",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "UUID du dossier de destination, ou `null` pour la racine du classeur cible. Ne pas envoyer la chaîne `\"null\"`."
                   },
                   "target_notebook_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "description": "UUID du classeur (notebook) de destination lorsque le déplacement change de classeur. Format UUID strict."
                   }
                 }
               }
@@ -3086,7 +3110,7 @@
             }
           },
           "422": {
-            "description": "Payload invalide (target_folder_id doit être UUID ou null, target_notebook_id UUID)",
+            "description": "Payload invalide : `target_folder_id` doit être un UUID ou `null` JSON (pas la chaîne littérale texte null entre guillemets). `target_notebook_id` doit être un UUID si fourni.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3152,7 +3176,7 @@
       "post": {
         "operationId": "createFolder",
         "summary": "Créer un dossier",
-        "description": "Crée un nouveau dossier dans un classeur",
+        "description": "Crée un nouveau dossier dans un classeur. Corps JSON : `name`, `classeur_id` (obligatoires), `parent_id` optionnel (UUID du dossier parent, ou `null` / omis pour un dossier à la racine du classeur). **Ne pas** envoyer la chaîne `\"null\"` à la place de `null`.\n\n**Champ API** : `parent_id` (pas `parent_folder_id`).",
         "tags": [
           "Dossiers"
         ],
@@ -3170,24 +3194,29 @@
                 "properties": {
                   "name": {
                     "type": "string",
-                    "maxLength": 255
+                    "maxLength": 255,
+                    "description": "Nom du dossier"
                   },
                   "classeur_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "description": "Référence du classeur : UUID ou identifiant accepté par l’API (obligatoire)"
                   },
-                  "parent_folder_id": {
+                  "parent_id": {
                     "type": "string",
-                    "format": "uuid"
-                  },
-                  "position": {
-                    "type": "integer"
+                    "format": "uuid",
+                    "nullable": true,
+                    "description": "UUID du dossier parent dans ce classeur. Omis ou `null` JSON → dossier à la **racine**. Pas la chaîne `\"null\"`."
                   }
                 },
                 "required": [
                   "name",
                   "classeur_id"
                 ]
+              },
+              "example": {
+                "name": "Sous-dossier",
+                "classeur_id": "11111111-1111-1111-1111-111111111111",
+                "parent_id": null
               }
             }
           }
@@ -3355,10 +3384,10 @@
       }
     },
     "/folder/{ref}/move": {
-      "post": {
+      "put": {
         "operationId": "moveFolder",
         "summary": "Déplacer un dossier",
-        "description": "Déplace un dossier vers un autre classeur ou dossier parent",
+        "description": "Déplace un dossier (identifié par `ref` dans l’URL) vers un autre emplacement. Corps : `target_classeur_id` (classeur cible) et/ou `target_folder_id` (dossier parent cible, ou `null` pour la racine). **Noms de champs exacts** : `target_classeur_id` et `target_folder_id` — pas `classeur_id` / `parent_folder_id`. Voir `moveNote` pour le même principe sur les UUID / `null` JSON.",
         "tags": [
           "Dossiers"
         ],
@@ -3385,21 +3414,22 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "classeur_id": {
+                  "target_folder_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "nullable": true,
+                    "description": "UUID du dossier parent de destination, ou `null` pour la racine du classeur cible. Pas la chaîne `\"null\"`."
                   },
-                  "parent_folder_id": {
+                  "target_classeur_id": {
                     "type": "string",
-                    "format": "uuid"
-                  },
-                  "position": {
-                    "type": "integer"
+                    "format": "uuid",
+                    "description": "UUID du classeur cible si le déplacement change de classeur. Optionnel si seul l’ordre interne change (selon règles serveur)."
                   }
-                },
-                "required": [
-                  "classeur_id"
-                ]
+                }
+              },
+              "example": {
+                "target_classeur_id": "11111111-1111-1111-1111-111111111111",
+                "target_folder_id": null
               }
             }
           }
@@ -3799,10 +3829,10 @@
       }
     },
     "/classeur/reorder": {
-      "post": {
+      "put": {
         "operationId": "reorderClasseurs",
         "summary": "Réorganiser les classeurs",
-        "description": "Réorganise l'ordre des classeurs de l'utilisateur",
+        "description": "Réordonne les classeurs de l’utilisateur. **Corps attendu (Zod)** : tableau **`classeurs`** avec pour chaque entrée **`id`** (UUID du classeur) et **`position`** (entier ≥ 0). Au moins une entrée. Ne pas utiliser `classeur_orders` ni `classeur_id` — ceux-ci ne correspondent pas au schéma serveur.",
         "tags": [
           "Classeurs"
         ],
@@ -3818,28 +3848,45 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "classeur_orders": {
+                  "classeurs": {
                     "type": "array",
+                    "minItems": 1,
+                    "description": "Liste ordonnée : chaque classeur à repositionner",
                     "items": {
                       "type": "object",
                       "properties": {
-                        "classeur_id": {
+                        "id": {
                           "type": "string",
-                          "format": "uuid"
+                          "format": "uuid",
+                          "description": "UUID du classeur (nom de champ exact : id)"
                         },
                         "position": {
-                          "type": "integer"
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "Position dans la liste (entier)"
                         }
                       },
                       "required": [
-                        "classeur_id",
+                        "id",
                         "position"
                       ]
                     }
                   }
                 },
                 "required": [
-                  "classeur_orders"
+                  "classeurs"
+                ]
+              },
+              "example": {
+                "classeurs": [
+                  {
+                    "id": "11111111-1111-1111-1111-111111111111",
+                    "position": 0
+                  },
+                  {
+                    "id": "22222222-2222-2222-2222-222222222222",
+                    "position": 1
+                  }
                 ]
               }
             }
@@ -4619,7 +4666,7 @@
       },
       "ValidationError": {
         "type": "object",
-        "description": "Réponse 422 : erreur de validation du payload avec détails par champ",
+        "description": "Réponse 422 : erreur de validation du payload avec détails par champ. Cause fréquente pour les agents : envoyer des chaînes `\"null\"` ou `\"\"` là où l’API attend un UUID, une URI, ou `null` JSON / omission du champ (voir description globale de l’API).",
         "properties": {
           "error": {
             "type": "string",

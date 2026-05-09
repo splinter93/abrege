@@ -392,6 +392,15 @@ div.markdown-body ul[data-type="taskList"],
 .markdown-body tbody tr:last-child td {
   border-bottom: none !important;
 }
+
+/* Ligne sous l'en-tête en édition :
+   - <thead><th> (HTML classique)
+   - ou 1re ligne = <th> dans <tbody> uniquement (structure Tiptap / pas de thead) */
+.ProseMirror thead th,
+.ProseMirror tbody tr:first-child th {
+  /* Mode édition : trait sous en-tête légèrement plus sombre que --chat-code-block-border (preview reste inchangée) */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.042) !important;
+}
 /* Tableau sans tbody (que des en-têtes) : dernière ligne = thead, éviter doublon */
 .ProseMirror table:not(:has(tbody)) thead tr:last-child th,
 .markdown-body table:not(:has(tbody)) thead tr:last-child th {
