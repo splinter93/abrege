@@ -69,6 +69,27 @@ export class S3Service {
   }
 
   /**
+   * Upload direct d'un buffer (serveur uniquement, ex. images OCR PDF).
+   */
+  async uploadObject(key: string, body: Buffer, contentType: string): Promise<void> {
+    try {
+      const command = new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: body,
+        ContentType: contentType,
+        Metadata: {
+          uploadedAt: new Date().toISOString(),
+          uploadedBy: 'abrege-api',
+        },
+      });
+      await this.client.send(command);
+    } catch (error) {
+      throw this.handleS3Error(error, 'uploadObject');
+    }
+  }
+
+  /**
    * Génère une URL pré-signée pour l'upload
    */
   async generateUploadUrl(options: UploadOptions): Promise<S3UploadResult> {

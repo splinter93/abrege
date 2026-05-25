@@ -16,6 +16,8 @@ export interface PdfParseOptions {
   splitByPage?: boolean;
   preset?: PdfParsePreset;
   includeTables?: boolean;
+  /** Réservé au serveur (/api/pdf/parse) : upload des images OCR Mistral vers S3. */
+  userId?: string;
 }
 
 export interface PdfParsePageMetadata {

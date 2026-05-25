@@ -17,6 +17,10 @@ Couche provider pour le parsing PDF : un seul point d’entrée applicatif (`/ap
 
 Les types canoniques (`PdfParseOptions`, `PdfParseResult`, `PdfParserHealthResult`) sont dans `types/index.ts`. Chaque adapter doit renvoyer ces formats (en normalisant la réponse de l’API externe si besoin).
 
+### Mistral OCR — images
+
+Mistral renvoie des références relatives dans le markdown (`![…](img-0.jpeg)`) et les binaires dans `pages[].images` (avec `include_image_base64`). L’adapter Mistral, lorsque `userId` est fourni par `/api/pdf/parse`, uploade chaque image sur S3 (`pdf-ocr/{userId}/{requestId}/p{pageIndex}/{imageId}` — l’index de page évite les collisions car Mistral réutilise `img-0.jpeg` sur chaque page) et réécrit le markdown avec l’URL publique S3.
+
 ## Structure
 
 - `types/` — types canoniques (domaine)

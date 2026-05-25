@@ -50,12 +50,14 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const authResult = await getAuthenticatedUser(request);
-  if (!authResult.success) {
+  if (!authResult.success || !authResult.userId) {
     return NextResponse.json(
-      { error: authResult.error },
+      { error: authResult.error ?? 'Authentification requise' },
       { status: authResult.status ?? 401 }
     );
   }
+
+  const userId = authResult.userId;
 
   try {
     const formData = await request.formData();
@@ -85,8 +87,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     };
     const parsed = parseOptionsQuerySchema.safeParse(queryRaw);
     const options = parsed.success
-      ? queryToPdfParseOptions(parsed.data)
-      : { resultType: 'markdown' as const };
+      ? { ...queryToPdfParseOptions(parsed.data), userId }
+      : { resultType: 'markdown' as const, userId };
     const requestQuery = searchParams.toString();
     const pdfParserOverride = searchParams.get('pdf_parser')?.trim().toLowerCase();
     const provider = getPdfParserProvider(

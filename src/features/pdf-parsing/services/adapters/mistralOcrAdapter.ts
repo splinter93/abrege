@@ -6,6 +6,10 @@
  */
 
 import { logger, LogCategory } from '@/utils/logger';
+import {
+  processMistralOcrPageImages,
+  type MistralOcrPageWithImages,
+} from '../mistralOcrImageToS3';
 import type { IPdfParserProvider } from '../contract';
 import type {
   PdfParseOptions,
@@ -42,12 +46,7 @@ interface MistralFileUploadResponse {
 }
 
 /** Une page dans la réponse OCR Mistral */
-interface MistralOcrPage {
-  index: number;
-  markdown?: string;
-  tables?: unknown[];
-  dimensions?: { dpi?: number; height?: number; width?: number };
-}
+type MistralOcrPage = MistralOcrPageWithImages;
 
 /** Réponse Mistral OCR (POST /v1/ocr) */
 interface MistralOcrResponse {
@@ -290,6 +289,7 @@ export class MistralOcrAdapter implements IPdfParserProvider {
           model,
           document,
           table_format: options.includeTables !== false ? 'markdown' : undefined,
+          include_image_base64: Boolean(options.userId),
         }),
       });
 
@@ -303,7 +303,16 @@ export class MistralOcrAdapter implements IPdfParserProvider {
         return { requestId, success: false, error: msg };
       }
 
-      const data = mapOcrResponseToSuccessData(ocrData, options);
+      let pages = ocrData.pages ?? [];
+      const userId = options.userId?.trim();
+      const hasImagesToUpload = pages.some(
+        (p) => p.images?.some((img) => Boolean(img.id && img.image_base64))
+      );
+      if (userId && hasImagesToUpload) {
+        pages = await processMistralOcrPageImages(pages, userId, requestId);
+      }
+
+      const data = mapOcrResponseToSuccessData({ ...ocrData, pages }, options);
       logger.info(LogCategory.API, '[MistralOcrAdapter] PDF parsé', {
         requestId,
         wordCount: data.stats.wordCount,
