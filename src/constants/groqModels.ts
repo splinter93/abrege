@@ -306,6 +306,19 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     recommended: true
   },
   {
+    id: 'openrouter/minimax-m3',
+    name: 'MiniMax M3',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'images', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
+    contextWindow: 204800,
+    maxOutput: 8192,
+    speed: 550,
+    pricing: { input: 'Variable', output: 'Variable' },
+    description: 'MiniMax M3 via OpenRouter (Liminality), multimodal — images (vidéos côté API, non exposées dans l’UI pour l’instant)',
+    recommended: false
+  },
+  {
     id: 'openrouter/minimax-m2.7',
     name: 'MiniMax M2.7',
     category: 'liminality',
