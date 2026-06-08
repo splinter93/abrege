@@ -123,7 +123,15 @@ const ChatInput: React.FC<ChatInputProps> = ({
   } = useNoteSearch({ getAccessToken });
 
   // 🎯 Hook PDF dans le chat (parse → note → attach)
-  const { handlePdfFiles, isParsingPdf, pdfError, clearPdfError } = usePdfInChat({
+  const {
+    handlePdfFiles,
+    isUploadingPdf,
+    isParsingPdf,
+    isPdfBusy,
+    pdfError,
+    clearPdfError,
+  } = usePdfInChat({
+    sessionId,
     setSelectedNotes,
   });
   
@@ -562,7 +570,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
         onToggleVocalMode={onToggleVocalMode}
         onSend={handleSend} onStopGeneration={onStopGeneration}
         canSend={(!!message.trim() || images.length > 0) && (images.length === 0 || images.every(img => isImageUrlUploaded(img.base64)))}
-        disabled={disabled || isParsingPdf} loading={loading || isParsingPdf}
+        disabled={disabled || isPdfBusy} loading={loading || isPdfBusy}
+        isUploadingPdf={isUploadingPdf}
         isParsingPdf={isParsingPdf}
         imagesUploading={images.length > 0 && images.some(img => !isImageUrlUploaded(img.base64))}
       />

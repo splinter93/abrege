@@ -13,6 +13,9 @@ import type {
 
 const PARSE_PATH = '/api/pdf/parse';
 const REQUEST_TIMEOUT_MS = 90_000;
+const S3_KEY_PARSE_TIMEOUT_MS = 120_000;
+const S3_KEY_PARSE_RETRY_DELAY_MS = 500;
+const S3_KEY_PARSE_MAX_ATTEMPTS = 2;
 const PDF_PARSER_PREFERENCE_KEY = 'chat-pdf-parser-preference';
 
 /** Préférence parseur PDF depuis les settings chat (General). Défaut : Mistral OCR. */
@@ -137,6 +140,112 @@ export class PdfParserClient {
           : message,
       };
     }
+  }
+
+  /**
+   * Parse un PDF déjà uploadé sur S3 (clé chat-pdfs/...).
+   * Le serveur résout s3_key → presigned GET → Mistral OCR (provider forcé mistral).
+   */
+  async parseFromS3Key(
+    s3Key: string,
+    options: PdfParseOptions = {},
+    token?: string | null
+  ): Promise<PdfParseResult> {
+    const params = new URLSearchParams();
+    params.set('s3_key', s3Key.trim());
+    params.set('result_type', options.resultType ?? 'markdown');
+    if (options.splitByPage) params.set('split_by_page', 'true');
+    if (options.preset) params.set('preset', options.preset);
+    if (options.includeTables === false) params.set('include_tables', 'false');
+    params.set('pdf_parser', 'mistral');
+
+    const url = `${PARSE_PATH}?${params.toString()}`;
+
+    for (let attempt = 1; attempt <= S3_KEY_PARSE_MAX_ATTEMPTS; attempt++) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), S3_KEY_PARSE_TIMEOUT_MS);
+
+      try {
+        const headers: HeadersInit = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: new FormData(),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        const body = await parseApiResponse<PdfParseResult>(response);
+
+        if (response.status === 404 && attempt < S3_KEY_PARSE_MAX_ATTEMPTS) {
+          logger.warn('[PdfParserClient] s3_key 404, retry après upload', {
+            s3Key,
+            attempt,
+          });
+          await new Promise((resolve) =>
+            setTimeout(resolve, S3_KEY_PARSE_RETRY_DELAY_MS)
+          );
+          continue;
+        }
+
+        if (!response.ok) {
+          logger.warn('[PdfParserClient] parseFromS3Key non OK', {
+            status: response.status,
+            requestId: body?.requestId,
+            error: body?.error,
+          });
+          return {
+            requestId: body?.requestId ?? '',
+            success: false,
+            error: getHttpErrorMessage(response.status, body?.error),
+          };
+        }
+
+        if (!body || !body.success || !body.data) {
+          return {
+            requestId: body?.requestId ?? '',
+            success: false,
+            error: body?.error ?? 'Parsing échoué',
+          };
+        }
+
+        logger.info('[PdfParserClient] PDF parsé depuis S3', {
+          requestId: body.requestId,
+          wordCount: body.data.stats?.wordCount,
+          pages: body.data.stats?.totalPages,
+        });
+
+        return {
+          requestId: body.requestId ?? '',
+          success: true,
+          data: body.data,
+        };
+      } catch (err) {
+        clearTimeout(timeoutId);
+        const message = err instanceof Error ? err.message : String(err);
+        const isAbort = err instanceof Error && err.name === 'AbortError';
+        logger.error('[PdfParserClient] parseFromS3Key erreur', {
+          message,
+          isAbort,
+          s3Key,
+        });
+        return {
+          requestId: '',
+          success: false,
+          error: isAbort
+            ? 'Délai dépassé. Le PDF est peut-être trop volumineux.'
+            : message,
+        };
+      }
+    }
+
+    return {
+      requestId: '',
+      success: false,
+      error: 'Upload non terminé ou fichier introuvable',
+    };
   }
 
   /**

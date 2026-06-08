@@ -9,6 +9,9 @@
     "src/app/api/chat/llm/stream/route.ts": {
       "maxDuration": 300
     },
+    "src/app/api/pdf/parse/route.ts": {
+      "maxDuration": 120
+    },
     "src/app/api/**/*.ts": {
       "maxDuration": 30
     }

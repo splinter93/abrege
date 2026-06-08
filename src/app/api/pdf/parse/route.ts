@@ -12,9 +12,14 @@ import {
   parseOptionsQuerySchema,
   queryToPdfParseOptions,
 } from '@/features/pdf-parsing/validation/parseOptionsSchema';
+import {
+  resolveChatPdfS3Key,
+  ResolveChatPdfS3KeyError,
+} from '@/features/pdf-parsing/utils/resolveChatPdfS3Key';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 120;
 
 /**
  * GET /api/pdf/parse — health check du provider configuré.
@@ -45,8 +50,8 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
 
 /**
  * POST /api/pdf/parse — parse PDF via le provider configuré.
- * Body: FormData avec "file" (PDF) et/ou "document_url". Query: document_url, result_type, split_by_page, preset, include_tables.
- * Mistral OCR accepte une URL (document_url) en lieu du fichier.
+ * Entrées (par priorité) : s3_key, document_url, file (FormData).
+ * s3_key → presigned GET S3 → Mistral OCR (provider forcé mistral).
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const authResult = await getAuthenticatedUser(request);
@@ -63,12 +68,51 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const formData = await request.formData();
     const file = formData.get('file');
     const { searchParams } = new URL(request.url);
-    const documentUrl = searchParams.get('document_url') ?? (formData.get('document_url') as string | null);
+
+    const s3KeyRaw =
+      searchParams.get('s3_key') ?? (formData.get('s3_key') as string | null);
+    const s3Key =
+      typeof s3KeyRaw === 'string' && s3KeyRaw.trim().length > 0
+        ? s3KeyRaw.trim()
+        : null;
+
+    let documentUrl =
+      searchParams.get('document_url') ?? (formData.get('document_url') as string | null);
+    let forceMistral = false;
+    let resolvedS3Key: string | undefined;
+
+    if (s3Key) {
+      try {
+        const resolved = await resolveChatPdfS3Key(userId, s3Key);
+        documentUrl = resolved.presignedGetUrl;
+        resolvedS3Key = resolved.key;
+        forceMistral = true;
+        logger.info(LogCategory.API, '[api/pdf/parse] s3_key résolu', {
+          userId,
+          s3Key: resolved.key,
+        });
+      } catch (err) {
+        if (err instanceof ResolveChatPdfS3KeyError) {
+          return NextResponse.json(
+            { success: false, requestId: '', error: err.message },
+            { status: err.httpStatus }
+          );
+        }
+        throw err;
+      }
+    }
+
     const hasFile = file && file instanceof Blob;
-    const hasUrl = typeof documentUrl === 'string' && documentUrl.trim().length > 0;
+    const hasUrl =
+      typeof documentUrl === 'string' && documentUrl.trim().length > 0;
+
     if (!hasFile && !hasUrl) {
       return NextResponse.json(
-        { success: false, error: 'Missing or invalid file field. Provide a PDF file or document_url (query or form).' },
+        {
+          success: false,
+          error:
+            'Missing input. Provide s3_key, document_url, or a PDF file.',
+        },
         { status: 400 }
       );
     }
@@ -89,12 +133,45 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const options = parsed.success
       ? { ...queryToPdfParseOptions(parsed.data), userId }
       : { resultType: 'markdown' as const, userId };
-    const requestQuery = searchParams.toString();
-    const pdfParserOverride = searchParams.get('pdf_parser')?.trim().toLowerCase();
+
+    const outboundParams = new URLSearchParams();
+    for (const [key, value] of searchParams.entries()) {
+      if (key === 's3_key' || key === 'document_url' || key === 'pdf_parser') continue;
+      outboundParams.set(key, value);
+    }
+    if (hasUrl && documentUrl) {
+      outboundParams.set('document_url', documentUrl.trim());
+    }
+
+    let pdfParserOverride = searchParams.get('pdf_parser')?.trim().toLowerCase();
+    if (forceMistral) {
+      if (pdfParserOverride === 'railway') {
+        logger.warn(LogCategory.API, '[api/pdf/parse] pdf_parser=railway ignoré pour s3_key', {
+          s3Key: resolvedS3Key,
+        });
+      }
+      pdfParserOverride = 'mistral';
+    }
+    if (pdfParserOverride === 'railway' || pdfParserOverride === 'mistral') {
+      outboundParams.set('pdf_parser', pdfParserOverride);
+    }
+    const requestQuery = outboundParams.toString();
+
     const provider = getPdfParserProvider(
-      pdfParserOverride === 'railway' || pdfParserOverride === 'mistral' ? pdfParserOverride : undefined
+      pdfParserOverride === 'railway' || pdfParserOverride === 'mistral'
+        ? pdfParserOverride
+        : undefined
     );
-    const result = await provider.parse(formData, options, requestQuery);
+
+    const providerFormData = new FormData();
+    if (hasUrl && documentUrl) {
+      providerFormData.set('document_url', documentUrl.trim());
+    }
+    if (hasFile && file instanceof Blob) {
+      providerFormData.set('file', file);
+    }
+
+    const result = await provider.parse(providerFormData, options, requestQuery);
     return NextResponse.json(result, {
       status: result.success ? 200 : 400,
     });

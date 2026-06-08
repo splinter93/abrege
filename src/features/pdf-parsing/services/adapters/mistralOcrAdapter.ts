@@ -10,6 +10,7 @@ import {
   processMistralOcrPageImages,
   type MistralOcrPageWithImages,
 } from '../mistralOcrImageToS3';
+import { processMistralOcrPageTables } from '../mistralOcrTableInlining';
 import type { IPdfParserProvider } from '../contract';
 import type {
   PdfParseOptions,
@@ -288,7 +289,8 @@ export class MistralOcrAdapter implements IPdfParserProvider {
         body: JSON.stringify({
           model,
           document,
-          table_format: options.includeTables !== false ? 'markdown' : undefined,
+          // Ne pas envoyer table_format : tables inline dans le markdown (défaut Mistral).
+          // table_format 'markdown'|'html' → placeholders [tbl-X](tbl-X) séparés.
           include_image_base64: Boolean(options.userId),
         }),
       });
@@ -311,6 +313,8 @@ export class MistralOcrAdapter implements IPdfParserProvider {
       if (userId && hasImagesToUpload) {
         pages = await processMistralOcrPageImages(pages, userId, requestId);
       }
+
+      pages = processMistralOcrPageTables(pages);
 
       const data = mapOcrResponseToSuccessData({ ...ocrData, pages }, options);
       logger.info(LogCategory.API, '[MistralOcrAdapter] PDF parsé', {

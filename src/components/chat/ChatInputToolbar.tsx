@@ -76,6 +76,8 @@ interface ChatInputToolbarProps {
   // UI state
   disabled?: boolean;
   loading?: boolean;
+  /** True pendant l'upload S3 du PDF */
+  isUploadingPdf?: boolean;
   /** True pendant le parsing PDF (affiche "Parsing PDF...") */
   isParsingPdf?: boolean;
   /** True si des images sont encore en cours d'upload S3 (évite 413) */
@@ -146,6 +148,7 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
   // UI state
   disabled = false,
   loading = false,
+  isUploadingPdf = false,
   isParsingPdf = false,
   imagesUploading = false
 }) => {
@@ -324,7 +327,12 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
         />
       </div>
       
-      {isParsingPdf && (
+      {isUploadingPdf && (
+        <span className="chatgpt-input-parsing-pdf" aria-live="polite">
+          Upload du PDF...
+        </span>
+      )}
+      {isParsingPdf && !isUploadingPdf && (
         <span className="chatgpt-input-parsing-pdf" aria-live="polite">
           Parsing PDF...
         </span>

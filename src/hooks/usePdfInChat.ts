@@ -1,6 +1,6 @@
 /**
- * Hook pour parser des PDFs via l'API Hybrid Parser puis créer une note et l'attacher au chat
- * Phase 1 : parse → nouvelle note → injectée dans le chat (selectedNotes)
+ * Hook pour parser des PDFs via S3 + Mistral OCR puis créer une note et l'attacher au chat.
+ * Flow : upload S3 (presigned) → parse via s3_key → nouvelle note → injectée dans le chat.
  */
 
 import { useState, useCallback } from 'react';
@@ -9,10 +9,12 @@ import { chatSuccess } from '@/utils/chatToast';
 import { useAuth } from '@/hooks/useAuth';
 import type { SelectedNote } from './useNotesLoader';
 import { pdfParserService, validatePdfFile } from '@/features/pdf-parsing';
+import { chatPdfUploadService } from '@/services/chatPdfUploadService';
 import { V2UnifiedApi } from '@/services/V2UnifiedApi';
 import { getOrCreateQuicknotesFolders } from '@/utils/quicknotesUtils';
 
 interface UsePdfInChatOptions {
+  sessionId: string;
   setSelectedNotes: React.Dispatch<React.SetStateAction<SelectedNote[]>>;
 }
 
@@ -48,7 +50,8 @@ function toSelectedNote(note: {
   };
 }
 
-export function usePdfInChat({ setSelectedNotes }: UsePdfInChatOptions) {
+export function usePdfInChat({ sessionId, setSelectedNotes }: UsePdfInChatOptions) {
+  const [isUploadingPdf, setIsUploadingPdf] = useState(false);
   const [isParsingPdf, setIsParsingPdf] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const { getAccessToken } = useAuth();
@@ -60,24 +63,25 @@ export function usePdfInChat({ setSelectedNotes }: UsePdfInChatOptions) {
       );
       if (pdfFiles.length === 0) return;
 
+      if (!sessionId?.trim()) {
+        setPdfError('Session chat invalide');
+        return;
+      }
+
       setPdfError(null);
-      setIsParsingPdf(true);
 
       const token = await getAccessToken();
       if (!token) {
         setPdfError('Authentification requise');
-        setIsParsingPdf(false);
         return;
       }
 
-      // Récupérer ou créer Quicknotes et dossier PDF
       let quicknotesFolders;
       try {
         quicknotesFolders = await getOrCreateQuicknotesFolders();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setPdfError(`Erreur Quicknotes: ${message}`);
-        setIsParsingPdf(false);
         return;
       }
 
@@ -91,21 +95,36 @@ export function usePdfInChat({ setSelectedNotes }: UsePdfInChatOptions) {
         }
 
         try {
-          const parseResult = await pdfParserService.parse(
-            file,
-            {
-              resultType: 'markdown',
-              splitByPage: false,
-              includeTables: true,
-            },
-            token
-          );
+          setIsUploadingPdf(true);
+          let uploaded;
+          try {
+            uploaded = await chatPdfUploadService.uploadPdf(file, sessionId, token);
+          } finally {
+            setIsUploadingPdf(false);
+          }
+
+          setIsParsingPdf(true);
+          let parseResult;
+          try {
+            parseResult = await pdfParserService.parseFromS3Key(
+              uploaded.key,
+              {
+                resultType: 'markdown',
+                splitByPage: false,
+                includeTables: true,
+              },
+              token
+            );
+          } finally {
+            setIsParsingPdf(false);
+          }
 
           if (!parseResult.success || !parseResult.data) {
             setPdfError(parseResult.error ?? 'Erreur de parsing');
             logger.warn('[usePdfInChat] Parse échoué', {
               requestId: parseResult.requestId,
               error: parseResult.error,
+              s3Key: uploaded.key,
             });
             continue;
           }
@@ -114,9 +133,6 @@ export function usePdfInChat({ setSelectedNotes }: UsePdfInChatOptions) {
           const markdown =
             parseResult.data.fullMarkdown ?? parseResult.data.fullText ?? '';
 
-          // Note dans Quicknotes > dossier PDF
-          // Exception justifiée : CreateNoteData requiert notebook_id: string mais l'API v2/note/create
-          // accepte null (validé par Zod schema). Le type TypeScript ne reflète pas cette flexibilité.
           const createPayload = {
             source_title: title,
             markdown_content: markdown,
@@ -141,6 +157,7 @@ export function usePdfInChat({ setSelectedNotes }: UsePdfInChatOptions) {
             noteId: newNote.id,
             title: newNote.title,
             requestId: parseResult.requestId,
+            s3Key: uploaded.key,
           });
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
@@ -148,17 +165,19 @@ export function usePdfInChat({ setSelectedNotes }: UsePdfInChatOptions) {
           logger.error('[usePdfInChat] Erreur', { error: err, fileName: file.name });
         }
       }
-
-      setIsParsingPdf(false);
     },
-    [setSelectedNotes]
+    [sessionId, setSelectedNotes, getAccessToken]
   );
 
   const clearPdfError = useCallback(() => setPdfError(null), []);
 
+  const isPdfBusy = isUploadingPdf || isParsingPdf;
+
   return {
     handlePdfFiles,
+    isUploadingPdf,
     isParsingPdf,
+    isPdfBusy,
     pdfError,
     clearPdfError,
   };
