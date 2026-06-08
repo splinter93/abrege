@@ -163,6 +163,31 @@ export function isEmptyAnalysisMessage(msg: ChatMessage): boolean {
 }
 
 /**
+ * Indique si un message doit apparaître dans la timeline UI du chat.
+ * Les messages tool/observation et les assistants vides (sans timeline) sont exclus :
+ * ils restent en DB pour le LLM mais ne doivent pas créer de « slots » fantômes à l'affichage.
+ */
+export function isDisplayableChatMessage(msg: ChatMessage): boolean {
+  if (msg.role === 'user') return true;
+  if (isObservationMessage(msg)) return false;
+  if (msg.role === 'tool') return false;
+  if (isEmptyAnalysisMessage(msg)) return false;
+
+  if (msg.role === 'assistant') {
+    const assistant = msg as AssistantMessage;
+    if (assistant.isStreaming) return true;
+    if (typeof assistant.content === 'string' && assistant.content.trim().length > 0) {
+      return true;
+    }
+    if (hasReasoning(msg)) return true;
+    const timeline = assistant.streamTimeline || assistant.stream_timeline;
+    return Boolean(timeline?.items?.length);
+  }
+
+  return false;
+}
+
+/**
  * Interface pour les données de résultat d'outil
  */
 export interface ToolResultData {
@@ -209,7 +234,8 @@ export interface MessageDebugInfo {
 export interface EditingState {
   messageId: string;
   originalContent: string;
-  messageIndex: number;
+  /** @deprecated Préférer messageId pour le cut — index raw infiniteMessages ≠ index affiché */
+  messageIndex?: number;
 }
 
 /**

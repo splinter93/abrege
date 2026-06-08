@@ -116,14 +116,22 @@ export function useChatMessageActions(
   }, [infiniteMessages]);
 
   const mergeMessagesByIdentity = useCallback((primary: ChatMessage[], secondary: ChatMessage[]) => {
-    const withKey = new Map<string, ChatMessage>();
+    const bySequence = new Map<number, ChatMessage>();
+    const byKey = new Map<string, ChatMessage>();
     const withoutKey: ChatMessage[] = [];
 
-    const register = (message: ChatMessage) => {
+    const register = (message: ChatMessage, preferThis: boolean) => {
+      if (typeof message.sequence_number === 'number') {
+        const existing = bySequence.get(message.sequence_number);
+        if (!existing || preferThis) {
+          bySequence.set(message.sequence_number, message);
+        }
+        return;
+      }
+
       const key =
         message.clientMessageId ||
         message.id ||
-        (typeof message.sequence_number === 'number' ? `seq-${message.sequence_number}` : null) ||
         (message.timestamp ? `ts-${message.timestamp}` : null);
 
       if (!key) {
@@ -131,13 +139,34 @@ export function useChatMessageActions(
         return;
       }
 
-      withKey.set(key, message);
+      const existing = byKey.get(key);
+      if (!existing || preferThis) {
+        byKey.set(key, message);
+      }
     };
 
-    primary.forEach(register);
-    secondary.forEach(register);
+    primary.forEach((message) => register(message, false));
+    secondary.forEach((message) => register(message, true));
 
-    return [...withKey.values(), ...withoutKey];
+    const merged = [...bySequence.values(), ...byKey.values(), ...withoutKey];
+    const seen = new Set<string>();
+    return merged.filter((message) => {
+      const keys: string[] = [];
+      if (typeof message.sequence_number === 'number') {
+        keys.push(`seq:${message.sequence_number}`);
+      }
+      if (message.operation_id) {
+        keys.push(`op:${message.operation_id}`);
+      }
+      const fallback = message.id || message.clientMessageId || message.timestamp;
+      if (fallback) {
+        keys.push(`id:${fallback}`);
+      }
+      if (keys.length === 0) return true;
+      if (keys.some((key) => seen.has(key))) return false;
+      keys.forEach((key) => seen.add(key));
+      return true;
+    });
   }, []);
 
   const sortMessagesChronologically = useCallback((messages: ChatMessage[]) => {

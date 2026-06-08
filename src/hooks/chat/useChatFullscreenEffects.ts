@@ -20,7 +20,7 @@ import type { UseChatAnimationsReturn } from './useChatAnimations';
 import type { UseStreamingStateReturn } from './useStreamingState';
 import type { UseChatFullscreenUIStateReturn } from './useChatFullscreenUIState';
 import type { CanvaSession as CanvaSessionFromStore } from '@/store/useCanvaStore';
-import { isEmptyAnalysisMessage } from '@/types/chat';
+import { isDisplayableChatMessage } from '@/types/chat';
 import { simpleLogger as logger } from '@/utils/logger';
 import { getSupabaseClient } from '@/utils/supabaseClientSingleton';
 import { useChatStore } from '@/store/useChatStore';
@@ -483,32 +483,15 @@ export function useChatFullscreenEffects(
     if (infiniteMessages.length === 0) return [];
     
     // ✅ OPTIMISATION: Pas de sort, les messages sont déjà triés par sequence_number depuis DB
-    let filtered = infiniteMessages.filter(msg => {
-      if (msg.role === 'user') return true;
-      if (msg.role === 'assistant' && msg.content) return true;
-      if (msg.role === 'tool') return true;
-      if (isEmptyAnalysisMessage(msg)) return false;
-      return true;
-    });
+    let filtered = infiniteMessages.filter(isDisplayableChatMessage);
     
-    // ✏️ Si en édition, masquer le message édité et ceux qui suivent
+    // ✏️ Si en édition, masquer le message édité et ceux qui suivent (index dans la liste affichée)
     if (editingMessage) {
-      let cutIndex = -1;
-      
-      if (typeof editingMessage.messageIndex === 'number') {
-        cutIndex = Math.min(Math.max(editingMessage.messageIndex, 0), filtered.length);
-      }
-      
-      if (cutIndex === -1) {
-        const fallbackIndex = filtered.findIndex(msg =>
-          msg.id === editingMessage.messageId ||
-          (msg.timestamp && editingMessage.messageId.includes(new Date(msg.timestamp).getTime().toString()))
-        );
-        if (fallbackIndex !== -1) {
-          cutIndex = fallbackIndex;
-        }
-      }
-      
+      const cutIndex = filtered.findIndex(msg =>
+        msg.id === editingMessage.messageId ||
+        (msg.timestamp && editingMessage.messageId.includes(new Date(msg.timestamp).getTime().toString()))
+      );
+
       if (cutIndex !== -1) {
         filtered = filtered.slice(0, cutIndex);
       }

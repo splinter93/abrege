@@ -64,7 +64,8 @@ export const useChatStore = create<ChatStore>()(
       setSessions: (sessions: ChatSession[]) => set({ sessions }),
       setCurrentSession: (session: ChatSession | null) => set({ 
         currentSession: session,
-        agentNotFound: false // ✅ Reset à chaque changement de session
+        agentNotFound: false, // ✅ Reset à chaque changement de session
+        editingMessage: null, // ✅ Quitter le mode édition au changement de conversation
       }),
       setSelectedAgent: (agent: Agent | null) => set({ 
         selectedAgent: agent,
