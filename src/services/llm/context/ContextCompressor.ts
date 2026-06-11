@@ -99,6 +99,97 @@ export function sanitizeToolSequences(messages: ChatMessage[]): ChatMessage[] {
   return out;
 }
 
+/**
+ * Nettoyage défensif avant construction du payload provider.
+ *
+ * Couvre les corruptions observées côté chat :
+ * - bulles optimistes/pending envoyées par erreur ;
+ * - réponses assistant identiques repersistées par un ancien stream ;
+ * - anciens messages user restés sans réponse, alors que le message courant
+ *   est ajouté séparément à la fin du payload.
+ */
+export function sanitizeHistoryForLLM(messages: ChatMessage[]): ChatMessage[] {
+  const sorted = [...messages].sort((a, b) => {
+    const seqA = typeof a.sequence_number === 'number' ? a.sequence_number : Number.POSITIVE_INFINITY;
+    const seqB = typeof b.sequence_number === 'number' ? b.sequence_number : Number.POSITIVE_INFINITY;
+    if (seqA !== seqB) {
+      return seqA - seqB;
+    }
+
+    const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+    const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+    return timeA - timeB;
+  });
+
+  const seenIdentityKeys = new Set<string>();
+  const seenAssistantFingerprints = new Set<string>();
+  const cleaned: ChatMessage[] = [];
+
+  for (const msg of sorted) {
+    const id = typeof msg.id === 'string' ? msg.id : '';
+    const isStreaming = 'isStreaming' in msg && msg.isStreaming === true;
+    if (msg.role === 'system' || id.startsWith('temp-') || id.startsWith('pending-') || isStreaming) {
+      continue;
+    }
+
+    const contentFingerprint = normalizeContentForFingerprint(msg.content);
+    const hasContent = contentFingerprint.length > 0;
+    const hasToolPayload = msg.role === 'assistant' && hasToolCalls(msg);
+    if (!hasContent && !hasToolPayload) {
+      continue;
+    }
+
+    const identityKeys = getHistoryIdentityKeys(msg);
+    if (identityKeys.some((key) => seenIdentityKeys.has(key))) {
+      continue;
+    }
+
+    if (msg.role === 'assistant' && !hasToolPayload && contentFingerprint.length > 80) {
+      if (seenAssistantFingerprints.has(contentFingerprint)) {
+        continue;
+      }
+      seenAssistantFingerprints.add(contentFingerprint);
+    }
+
+    identityKeys.forEach((key) => seenIdentityKeys.add(key));
+    cleaned.push(msg);
+  }
+
+  while (cleaned.length > 0 && cleaned[cleaned.length - 1]?.role === 'user') {
+    cleaned.pop();
+  }
+
+  return cleaned;
+}
+
+function getHistoryIdentityKeys(message: ChatMessage): string[] {
+  const keys: string[] = [];
+
+  if (message.operation_id) {
+    keys.push(`op:${message.operation_id}`);
+  }
+  if (message.id && !message.id.startsWith('temp-') && !message.id.startsWith('pending-')) {
+    keys.push(`id:${message.id}`);
+  }
+  if (typeof message.sequence_number === 'number') {
+    keys.push(`seq:${message.sequence_number}`);
+  }
+
+  return keys;
+}
+
+function normalizeContentForFingerprint(content: ChatMessage['content']): string {
+  if (typeof content === 'string') {
+    return content.trim().replace(/\s+/g, ' ');
+  }
+
+  try {
+    return JSON.stringify(content);
+  } catch {
+    return '';
+  }
+}
+
 /** ~20 échanges user/assistant */
 export const MAX_HISTORY_MESSAGES = 40;
 

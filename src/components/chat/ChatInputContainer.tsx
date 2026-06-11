@@ -8,6 +8,7 @@
 import React, { useEffect, useRef } from 'react';
 import ChatInput from './ChatInput';
 import { useTextToSpeechContextOptional } from '@/contexts/TextToSpeechContext';
+import type { EditingMessageDraft } from '@/types/chat';
 import type { MessageContent, ImageAttachment } from '@/types/image';
 import type { Note } from '@/services/chat/ChatContextBuilder';
 
@@ -30,6 +31,7 @@ export interface ChatInputContainerProps {
   currentAgentModel?: string;
   editingMessageId: string | null;
   editingContent: string;
+  editingDraft?: EditingMessageDraft | null;
   onCancelEdit: () => void;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   selectedAgent: { name: string; display_name?: string } | null;
@@ -55,6 +57,7 @@ const ChatInputContainer: React.FC<ChatInputContainerProps> = ({
   currentAgentModel,
   editingMessageId,
   editingContent,
+  editingDraft,
   onCancelEdit,
   textareaRef,
   selectedAgent,
@@ -106,6 +109,7 @@ const ChatInputContainer: React.FC<ChatInputContainerProps> = ({
         currentAgentModel={currentAgentModel}
         editingMessageId={editingMessageId}
         editingContent={editingContent}
+        editingDraft={editingDraft}
         onCancelEdit={onCancelEdit}
         isVocalMode={isVocalMode}
         onToggleVocalMode={onToggleVocalMode}

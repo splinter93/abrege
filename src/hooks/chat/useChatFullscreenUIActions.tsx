@@ -19,6 +19,7 @@ import type { CanvasSelection } from '@/types/canvasSelection';
 import type { UseChatMessageActionsReturn } from './useChatMessageActions';
 import type { UseChatFullscreenUIStateReturn } from './useChatFullscreenUIState';
 import type { CanvaSession } from '@/store/useCanvaStore';
+import { extractEditingDraftFromMessage } from '@/utils/chatEditingDraft';
 import { simpleLogger as logger } from '@/utils/logger';
 import { chatError, chatSuccess } from '@/utils/chatToast';
 
@@ -141,9 +142,18 @@ export function useChatFullscreenUIActions(
       return;
     }
 
-    startEditingMessage(messageId, content, realIndex);
-    uiState.setEditingContent(content);
-  }, [startEditingMessage, requireAuth, infiniteMessages, uiState.setEditingContent]);
+    const userMsg = infiniteMessages[realIndex];
+    const draft = extractEditingDraftFromMessage(userMsg, messageId);
+
+    startEditingMessage(messageId, draft?.content ?? content, realIndex);
+    if (draft) {
+      uiState.setEditingDraft(draft);
+      uiState.setEditingContent(draft.content);
+    } else {
+      uiState.setEditingDraft(null);
+      uiState.setEditingContent(content);
+    }
+  }, [startEditingMessage, requireAuth, infiniteMessages, uiState.setEditingContent, uiState.setEditingDraft]);
 
   /** Régénère la réponse : retrouve le message user précédant l'assistant donné par id, le renvoie tel quel en supprimant ce qui suit. */
   const handleRegenerateResponse = useCallback(async (assistantMessageId: string) => {
@@ -185,7 +195,8 @@ export function useChatFullscreenUIActions(
   const handleCancelEdit = useCallback(() => {
     cancelEditing();
     uiState.setEditingContent('');
-  }, [cancelEditing, uiState.setEditingContent]);
+    uiState.setEditingDraft(null);
+  }, [cancelEditing, uiState.setEditingContent, uiState.setEditingDraft]);
 
   const handleSendMessage = useCallback(async (
     message: string | MessageContent,
@@ -212,6 +223,7 @@ export function useChatFullscreenUIActions(
         notes,
         mentions,
         usedPrompts,
+        canvasSelections,
         messageIndex: editingMessage.messageIndex
       });
       return;

@@ -238,6 +238,66 @@ describe('[ChatMessageSendingService]', () => {
       expect(result.limitedHistory?.[49].id).toBe('msg-99');
     });
 
+    it('devrait nettoyer doublons assistant et users sans réponse avant envoi LLM', async () => {
+      const repeatedAnswer = 'Réponse assistant répétée dans l’historique envoyé au modèle. '.repeat(4);
+      const pollutedHistory: ChatMessage[] = [
+        {
+          id: 'u1',
+          role: 'user',
+          content: 'Question 1',
+          timestamp: now,
+          sequence_number: 1
+        },
+        {
+          id: 'a1',
+          role: 'assistant',
+          content: repeatedAnswer,
+          timestamp: now,
+          sequence_number: 2
+        },
+        {
+          id: 'u2',
+          role: 'user',
+          content: 'Question 2',
+          timestamp: now,
+          sequence_number: 3
+        },
+        {
+          id: 'a2',
+          role: 'assistant',
+          content: repeatedAnswer,
+          timestamp: now,
+          sequence_number: 4
+        },
+        {
+          id: 'pending-a3',
+          role: 'assistant',
+          content: 'stream encore actif',
+          timestamp: now,
+          isStreaming: true
+        },
+        {
+          id: 'u3',
+          role: 'user',
+          content: 'Question sans réponse',
+          timestamp: now,
+          sequence_number: 5
+        }
+      ];
+
+      const result = await service.prepare({
+        message: 'Question courante',
+        sessionId: mockSessionId,
+        currentSession: mockSession,
+        selectedAgent: mockAgent,
+        infiniteMessages: pollutedHistory,
+        llmContext: mockLLMContext
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.limitedHistory?.map((m) => m.id)).toEqual(['u1', 'a1']);
+    });
+
     it('devrait gérer erreur token auth', async () => {
       vi.mocked(tokenManager.getValidToken).mockResolvedValue({
         isValid: false,

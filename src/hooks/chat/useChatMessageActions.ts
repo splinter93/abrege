@@ -73,6 +73,7 @@ export interface UseChatMessageActionsReturn {
     notes?: Note[];
     mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>;
     usedPrompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }>;
+    canvasSelections?: CanvasSelection[];
     messageIndex?: number;
   }) => Promise<void>;
 
@@ -417,10 +418,15 @@ export function useChatMessageActions(
         hasNotes: notes && notes.length > 0
       });
 
+      const contextWithOperation = {
+        ...context,
+        userOperationId: operationId
+      };
+
       await sendMessageFn(
         message,
         currentSession.id,
-        context,
+        contextWithOperation,
         limitedHistory,
         token
       );
@@ -476,10 +482,11 @@ export function useChatMessageActions(
       notes?: Note[];
       mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>;
       usedPrompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }>;
+      canvasSelections?: CanvasSelection[];
       messageIndex?: number;
     }
   ) => {
-    const { messageId, newContent, images, notes, mentions, usedPrompts, messageIndex } = options;
+    const { messageId, newContent, images, notes, mentions, usedPrompts, canvasSelections, messageIndex } = options;
     // ✅ Auth guard
     if (!requireAuth()) {
       setError('Authentification requise');
@@ -492,13 +499,19 @@ export function useChatMessageActions(
       return;
     }
 
+    const historySnapshot = messagesRef.current;
+
     setIsLoading(true);
     setError(null);
     // ❌ NE PAS appeler onEditingChange(true) - déjà fait dans ChatFullscreenV2
 
-    const historySnapshot = messagesRef.current;
-
     try {
+      // Une édition crée une nouvelle branche. L'ancien stream ne doit plus pouvoir
+      // patcher l'UI côté client pendant que la branche DB est supprimée.
+      abortFn?.();
+      if (onBeforeSend) {
+        await onBeforeSend();
+      }
 
       // 1. Éditer via service (delete cascade + add nouveau message)
       const editResult = await chatMessageEditService.edit({
@@ -562,7 +575,7 @@ export function useChatMessageActions(
       //    - Ajouter le message user
       //    - Appeler le LLM
       //    - Gérer la réponse
-      await sendMessage(newContent, images, notes, mentions, usedPrompts);
+      await sendMessage(newContent, images, notes, mentions, usedPrompts, canvasSelections);
 
       logger.dev('[useChatMessageActions] ✅ Message édité renvoyé (flow normal)');
 
@@ -598,6 +611,8 @@ export function useChatMessageActions(
     sendMessage,
     replaceMessages,
     onEditingChange,
+    onBeforeSend,
+    abortFn,
     requireAuth,
     initialLoadLimit
   ]);

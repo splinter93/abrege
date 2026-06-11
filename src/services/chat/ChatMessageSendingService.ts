@@ -293,12 +293,114 @@ export class ChatMessageSendingService {
     messages: ChatMessage[],
     maxHistory: number
   ): ChatMessage[] {
-    if (messages.length <= maxHistory) {
-      return messages;
+    const cleaned = this.sanitizeHistoryForLLM(messages);
+
+    if (cleaned.length <= maxHistory) {
+      return cleaned;
     }
 
-    // Prendre les N derniers messages
-    return messages.slice(-maxHistory);
+    // Prendre les N derniers messages après nettoyage, pas avant.
+    return cleaned.slice(-maxHistory);
+  }
+
+  /**
+   * Nettoie l'historique envoyé au LLM.
+   *
+   * Invariant produit : le nouveau message utilisateur est envoyé séparément au backend.
+   * L'historique ne doit donc pas contenir d'ancien message user "ouvert" en fin de liste,
+   * ni de réponses assistant identiques repersistées par une course stream/realtime.
+   */
+  private sanitizeHistoryForLLM(messages: ChatMessage[]): ChatMessage[] {
+    const sortedMessages = this.sortMessagesChronologically(messages);
+    const seenIdentityKeys = new Set<string>();
+    const seenAssistantFingerprints = new Set<string>();
+    const cleaned: ChatMessage[] = [];
+
+    for (const message of sortedMessages) {
+      if (message.role === 'system') {
+        continue;
+      }
+
+      const id = typeof message.id === 'string' ? message.id : '';
+      const isStreaming = 'isStreaming' in message && message.isStreaming === true;
+      if (id.startsWith('temp-') || id.startsWith('pending-') || isStreaming) {
+        continue;
+      }
+
+      const contentFingerprint = this.normalizeContentForFingerprint(message.content);
+      const hasContent = contentFingerprint.length > 0;
+      const hasToolPayload =
+        message.role === 'assistant' &&
+        Array.isArray(message.tool_calls) &&
+        message.tool_calls.length > 0;
+
+      if (!hasContent && !hasToolPayload) {
+        continue;
+      }
+
+      const identityKeys = this.getHistoryIdentityKeys(message);
+      if (identityKeys.some((key) => seenIdentityKeys.has(key))) {
+        continue;
+      }
+
+      if (message.role === 'assistant' && !hasToolPayload && contentFingerprint.length > 80) {
+        if (seenAssistantFingerprints.has(contentFingerprint)) {
+          continue;
+        }
+        seenAssistantFingerprints.add(contentFingerprint);
+      }
+
+      identityKeys.forEach((key) => seenIdentityKeys.add(key));
+      cleaned.push(message);
+    }
+
+    while (cleaned.length > 0 && cleaned[cleaned.length - 1]?.role === 'user') {
+      cleaned.pop();
+    }
+
+    return cleaned;
+  }
+
+  private sortMessagesChronologically(messages: ChatMessage[]): ChatMessage[] {
+    return [...messages].sort((a, b) => {
+      const seqA = typeof a.sequence_number === 'number' ? a.sequence_number : Number.POSITIVE_INFINITY;
+      const seqB = typeof b.sequence_number === 'number' ? b.sequence_number : Number.POSITIVE_INFINITY;
+      if (seqA !== seqB) {
+        return seqA - seqB;
+      }
+
+      const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+      const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+      return timeA - timeB;
+    });
+  }
+
+  private getHistoryIdentityKeys(message: ChatMessage): string[] {
+    const keys: string[] = [];
+
+    if (message.operation_id) {
+      keys.push(`op:${message.operation_id}`);
+    }
+    if (message.id && !message.id.startsWith('temp-') && !message.id.startsWith('pending-')) {
+      keys.push(`id:${message.id}`);
+    }
+    if (typeof message.sequence_number === 'number') {
+      keys.push(`seq:${message.sequence_number}`);
+    }
+
+    return keys;
+  }
+
+  private normalizeContentForFingerprint(content: ChatMessage['content']): string {
+    if (typeof content === 'string') {
+      return content.trim().replace(/\s+/g, ' ');
+    }
+
+    try {
+      return JSON.stringify(content);
+    } catch {
+      return '';
+    }
   }
 
   /**

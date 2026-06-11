@@ -47,22 +47,21 @@ export interface ChatMessagesAreaProps {
 }
 
 /**
- * Clé stable par identifiants métier + suffixe index (obligatoire pour unicité entre frères React).
- * Sans l’index, deux messages pouvant partager le même identifiant dans des cas edge
- * provoquent une réconciliation incorrecte : actions (copier) peuvent cibler la mauvaise bulle.
+ * Clé stable par identifiants métier.
+ * L'index n'est utilisé qu'en dernier recours : sinon une suppression/reload au milieu
+ * remonte toute la liste et force React à remonter des bulles qui n'ont pas changé.
  */
 function getChatMessageReactKey(message: ChatMessageType, index: number): string {
-  let base: string;
   if (message.operation_id) {
-    base = `op:${message.operation_id}`;
-  } else if (message.clientMessageId) {
-    base = `c:${message.clientMessageId}`;
-  } else if (message.id) {
-    base = `i:${message.id}`;
-  } else {
-    base = `x:${message.role}:${String(message.timestamp ?? '')}`;
+    return `op:${message.operation_id}`;
   }
-  return `${base}~${index}`;
+  if (message.clientMessageId) {
+    return `c:${message.clientMessageId}`;
+  }
+  if (message.id) {
+    return `i:${message.id}`;
+  }
+  return `x:${message.role}:${String(message.timestamp ?? '')}:${index}`;
 }
 
 /**

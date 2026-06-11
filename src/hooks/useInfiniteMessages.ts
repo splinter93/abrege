@@ -349,9 +349,9 @@ export function useInfiniteMessages(
       // Remplace à la position du premier match, supprime les doublons éventuels.
       const firstIdx = matchingIndices[0];
       const matchSet = new Set(matchingIndices);
-      return prev
+      return sortMessagesChronologically(prev
         .map((msg, i) => (i === firstIdx ? message : msg))
-        .filter((_, i) => i === firstIdx || !matchSet.has(i));
+        .filter((_, i) => i === firstIdx || !matchSet.has(i)));
     });
   }, []);
 
@@ -384,7 +384,7 @@ export function useInfiniteMessages(
    * 🔄 Remplacer tous les messages (changement de session)
    */
   const replaceMessages = useCallback((newMessages: ChatMessage[]) => {
-    setMessages(newMessages);
+    setMessages(sortMessagesChronologically(newMessages));
     isInitializedRef.current = true;
   }, []);
 

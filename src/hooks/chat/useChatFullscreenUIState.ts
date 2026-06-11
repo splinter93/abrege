@@ -12,6 +12,7 @@
 
 import { useState, useRef, useMemo, useEffect } from 'react';
 import type { MessageContent, ImageAttachment } from '@/types/image';
+import type { EditingMessageDraft } from '@/types/chat';
 import type { StreamErrorDetails } from '@/services/streaming/StreamOrchestrator';
 import { attachNativeKeyboardController } from '@/utils/nativeKeyboardController';
 
@@ -33,6 +34,7 @@ export interface UseChatFullscreenUIStateReturn {
   sidebarHovered: boolean;
   agentDropdownOpen: boolean;
   editingContent: string;
+  editingDraft: EditingMessageDraft | null;
   canvaWidth: number;
   keyboardInset: number;
   streamError: StreamErrorDetails | null;
@@ -53,6 +55,7 @@ export interface UseChatFullscreenUIStateReturn {
   setSidebarHovered: (hovered: boolean) => void;
   setAgentDropdownOpen: (open: boolean) => void;
   setEditingContent: (content: string) => void;
+  setEditingDraft: (draft: EditingMessageDraft | null) => void;
   setCanvaWidth: (width: number) => void;
   setStreamError: (error: StreamErrorDetails | null) => void;
   setLastUserMessage: (msg: { content: string | MessageContent; images?: ImageAttachment[] } | null) => void;
@@ -77,6 +80,7 @@ export function useChatFullscreenUIState(
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const [agentDropdownOpen, setAgentDropdownOpen] = useState(false);
   const [editingContent, setEditingContent] = useState('');
+  const [editingDraft, setEditingDraft] = useState<EditingMessageDraft | null>(null);
   const [canvaWidth, setCanvaWidth] = useState(66); // 66% par défaut
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [streamError, setStreamError] = useState<StreamErrorDetails | null>(null);
@@ -186,6 +190,7 @@ export function useChatFullscreenUIState(
     sidebarHovered,
     agentDropdownOpen,
     editingContent,
+    editingDraft,
     canvaWidth,
     keyboardInset,
     streamError,
@@ -206,6 +211,7 @@ export function useChatFullscreenUIState(
     setSidebarHovered,
     setAgentDropdownOpen,
     setEditingContent,
+    setEditingDraft,
     setCanvaWidth,
     setStreamError,
     setLastUserMessage

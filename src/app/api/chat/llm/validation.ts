@@ -134,6 +134,10 @@ const chatMessageSchema = z
       .optional()
       .transform((v) => (v === null ? undefined : v)),
     timestamp: z.string().optional(),
+    sequence_number: z.number().int().optional(),
+    operation_id: z.string().uuid().optional(),
+    clientMessageId: z.string().optional(),
+    isStreaming: z.boolean().optional(),
     channel: z.string().optional(),
     reasoning: z
       .string()

@@ -511,6 +511,7 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
       if (!editing) {
         cancelEditing();
         uiState.setEditingContent('');
+        uiState.setEditingDraft(null);
       }
     },
     requireAuth,
@@ -799,6 +800,7 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
                     currentAgentModel={selectedAgent?.model}
                     editingMessageId={editingMessage?.messageId || null}
                     editingContent={uiState.editingContent}
+                    editingDraft={uiState.editingDraft}
                     onCancelEdit={uiActions.handleCancelEdit}
                     textareaRef={uiState.textareaRef}
                     selectedAgent={selectedAgent}

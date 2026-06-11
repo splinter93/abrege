@@ -47,6 +47,7 @@ interface ChatInputProps {
   currentAgentModel?: string;
   editingMessageId?: string | null;
   editingContent?: string;
+  editingDraft?: import('@/types/chat').EditingMessageDraft | null;
   onCancelEdit?: () => void;
   isVocalMode?: boolean;
   onToggleVocalMode?: () => void;
@@ -84,6 +85,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   currentAgentModel,
   editingMessageId,
   editingContent,
+  editingDraft,
   onCancelEdit,
   isVocalMode = false,
   onToggleVocalMode
@@ -95,6 +97,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   
   // ✅ Ref pour contrôler AudioRecorder via raccourci clavier
   const audioRecorderRef = React.useRef<import('./AudioRecorder').AudioRecorderRef>(null);
+  const restoredEditIdRef = React.useRef<string | null>(null);
   
   // 🎯 Hook menus
   const {
@@ -183,6 +186,72 @@ const ChatInput: React.FC<ChatInputProps> = ({
     mentionSearchQuery,
     setMentionSearchQuery
   } = useChatState({ editingContent, textareaRef });
+
+  // ✏️ Restaurer images, notes épinglées, mentions, prompts et canvas en mode édition
+  useEffect(() => {
+    if (!editingMessageId || !editingDraft || editingDraft.messageId !== editingMessageId) {
+      return;
+    }
+    if (restoredEditIdRef.current === editingMessageId) {
+      return;
+    }
+
+    restoredEditIdRef.current = editingMessageId;
+    setSelectedNotes(editingDraft.attachedNotes);
+    setMentions(editingDraft.mentions);
+    setUsedPrompts(editingDraft.prompts);
+    setCanvasSelections(editingDraft.canvasSelections);
+
+    let cancelled = false;
+    const targetMessageId = editingMessageId;
+
+    void (async () => {
+      clearImages();
+      for (const img of editingDraft.attachedImages) {
+        if (cancelled || restoredEditIdRef.current !== targetMessageId) {
+          return;
+        }
+        await addImageFromUrl(img.url, img.fileName || 'image');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    editingMessageId,
+    editingDraft,
+    setSelectedNotes,
+    setMentions,
+    setUsedPrompts,
+    setCanvasSelections,
+    clearImages,
+    addImageFromUrl,
+  ]);
+
+  // ✏️ Nettoyer les pièces jointes quand on quitte le mode édition (annulation)
+  useEffect(() => {
+    if (editingMessageId) {
+      return;
+    }
+    if (!restoredEditIdRef.current) {
+      return;
+    }
+
+    restoredEditIdRef.current = null;
+    setSelectedNotes([]);
+    setMentions([]);
+    setUsedPrompts([]);
+    setCanvasSelections([]);
+    clearImages();
+  }, [
+    editingMessageId,
+    setSelectedNotes,
+    setMentions,
+    setUsedPrompts,
+    setCanvasSelections,
+    clearImages,
+  ]);
 
   const [pendingPrompt, setPendingPrompt] = React.useState<EditorPrompt | null>(null);
   const [pendingPromptInitialValues, setPendingPromptInitialValues] = React.useState<Record<string, string> | undefined>();

@@ -33,7 +33,8 @@ import {
   MAX_HISTORY_MESSAGES,
   TOOL_RESULT_THRESHOLD,
   truncateHistory,
-  sanitizeToolSequences
+  sanitizeToolSequences,
+  sanitizeHistoryForLLM
 } from '@/services/llm/context/ContextCompressor';
 import { resolveAgentSystemInstructionNotes } from '@/services/llm/AgentMentionResolver';
 
@@ -88,6 +89,10 @@ export async function POST(request: NextRequest) {
     }
     
     const { message, context, history, agentConfig, skipAddingUserMessage, maxHistoryMessages, timeoutMs } = validation.data;
+    const requestUserOperationId =
+      typeof (context as { userOperationId?: unknown }).userOperationId === 'string'
+        ? (context as { userOperationId: string }).userOperationId
+        : null;
 
     // 🎨 Extraire le noteId du contexte canva (si présent)
     const noteId = context.canva_context && typeof context.canva_context === 'object' && 'activeNote' in context.canva_context 
@@ -396,12 +401,12 @@ export async function POST(request: NextRequest) {
     // Conversion type-safe via mapper
     const sanitizedHistory = sanitizeToolSequences(
       truncateHistory(
-        history.map((msg, index) => ({
+        sanitizeHistoryForLLM(history.map((msg, index) => ({
           ...msg,
           id: msg.id ?? `history-${index}`,
           content: msg.content ?? '',
           timestamp: msg.timestamp ?? new Date().toISOString()
-        })) as ChatMessage[],
+        })) as ChatMessage[]),
         maxHistoryMessages ?? MAX_HISTORY_MESSAGES
       )
     );
@@ -715,14 +720,23 @@ export async function POST(request: NextRequest) {
         ? addBaseToolCallInstructions(systemMessageBase)
         : systemMessageBase;
 
+    const injectedContextContent = contextInjectionResult.contextMessages
+      .map((contextMessage) =>
+        typeof contextMessage.content === 'string' ? contextMessage.content.trim() : ''
+      )
+      .filter((content) => content.length > 0)
+      .join('\n\n');
+    const systemMessageWithInjectedContext = injectedContextContent
+      ? `${systemMessage}\n\n# Contexte utilisateur fourni\n${injectedContextContent}`
+      : systemMessage;
+
     const messages: ChatMessage[] = ([
       {
         role: 'system',
-        content: systemMessage,
+        content: systemMessageWithInjectedContext,
         timestamp: new Date().toISOString()
       },
       ...sanitizedHistory,
-      ...contextInjectionResult.contextMessages,
       ...(skipAddingUserMessage ? [] : [{
         role: 'user' as const,
         content: userMessageText,
@@ -737,7 +751,8 @@ export async function POST(request: NextRequest) {
       historyLength: sanitizedHistory.length,
       hasUserMessage: !skipAddingUserMessage,
       hasPlanToolInstructions: hasPlanTool,
-      systemMessageLength: systemMessage.length,
+      systemMessageLength: systemMessageWithInjectedContext.length,
+      injectedContextMessages: contextInjectionResult.contextMessages.length,
       userMessageText: userMessageText.substring(0, 100) + (userMessageText.length > 100 ? '...' : ''),
       userMessageHasImages: !!(userMessageImages && userMessageImages.length > 0),
       userMessageImageCount: userMessageImages?.length || 0,
@@ -1817,19 +1832,42 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                     sessionId
                   });
                 } else {
-                  const { historyManager } = await import('@/services/chat/HistoryManager');
-                  const reasoning =
-                    finalAssistant &&
-                    'reasoning' in finalAssistant &&
-                    typeof finalAssistant.reasoning === 'string'
-                      ? finalAssistant.reasoning
-                      : undefined;
-                  await historyManager.addMessage(sessionId, {
-                    role: 'assistant',
-                    content: textContent,
-                    ...(reasoning ? { reasoning } : {}),
-                    operation_id: serverOperationId
-                  });
+                  let canPersistAssistant = true;
+
+                  if (requestUserOperationId) {
+                    const { data: parentUserMessage } = await supabase
+                      .from('chat_messages')
+                      .select('id, sequence_number')
+                      .eq('session_id', sessionId)
+                      .eq('operation_id', requestUserOperationId)
+                      .eq('role', 'user')
+                      .maybeSingle();
+
+                    if (!parentUserMessage) {
+                      logger.warn(LogCategory.API, '[Stream Route] ⚠️ Server persist skipped: parent user message missing', {
+                        sessionId,
+                        userOperationId: requestUserOperationId,
+                        assistantOperationId: serverOperationId
+                      });
+                      canPersistAssistant = false;
+                    }
+                  }
+
+                  if (canPersistAssistant) {
+                    const { historyManager } = await import('@/services/chat/HistoryManager');
+                    const reasoning =
+                      finalAssistant &&
+                      'reasoning' in finalAssistant &&
+                      typeof finalAssistant.reasoning === 'string'
+                        ? finalAssistant.reasoning
+                        : undefined;
+                    await historyManager.addMessage(sessionId, {
+                      role: 'assistant',
+                      content: textContent,
+                      ...(reasoning ? { reasoning } : {}),
+                      operation_id: serverOperationId
+                    });
+                  }
                 }
               } catch (persistErr) {
                 logger.error(

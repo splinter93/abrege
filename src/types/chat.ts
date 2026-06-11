@@ -169,12 +169,12 @@ export function isEmptyAnalysisMessage(msg: ChatMessage): boolean {
  */
 export function isDisplayableChatMessage(msg: ChatMessage): boolean {
   if (msg.role === 'user') return true;
-  if (isObservationMessage(msg)) return false;
   if (msg.role === 'tool') return false;
-  if (isEmptyAnalysisMessage(msg)) return false;
 
   if (msg.role === 'assistant') {
     const assistant = msg as AssistantMessage;
+    if (assistant.name === 'observation') return false;
+    if (assistant.channel === 'analysis' && !assistant.content) return false;
     if (assistant.isStreaming) return true;
     if (typeof assistant.content === 'string' && assistant.content.trim().length > 0) {
       return true;
@@ -236,6 +236,26 @@ export interface EditingState {
   originalContent: string;
   /** @deprecated Préférer messageId pour le cut — index raw infiniteMessages ≠ index affiché */
   messageIndex?: number;
+}
+
+/**
+ * Brouillon complet pour pré-remplir le ChatInput en mode édition
+ */
+export interface EditingMessageDraft {
+  messageId: string;
+  content: string;
+  attachedImages: Array<{ url: string; fileName?: string }>;
+  attachedNotes: Array<{
+    id: string;
+    slug: string;
+    title: string;
+    word_count?: number;
+    description?: string;
+    created_at?: string;
+  }>;
+  mentions: import('@/types/noteMention').NoteMention[];
+  prompts: import('@/types/promptMention').PromptMention[];
+  canvasSelections: import('@/types/canvasSelection').CanvasSelection[];
 }
 
 /**

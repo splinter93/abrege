@@ -4,6 +4,7 @@ import { hasToolCalls } from '@/types/chat';
 import {
   compressToolResults,
   INTERNAL_TOOL_COMPRESSED_MARKER,
+  sanitizeHistoryForLLM,
   truncateHistory
 } from '../ContextCompressor';
 
@@ -160,5 +161,24 @@ describe('compressToolResults', () => {
     expect(planResult.content).toBe(INTERNAL_TOOL_COMPRESSED_MARKER);
     // Round 1 est au cutoff (protégé) → contenu intact
     expect(round1Result.content).toBe(bigResult);
+  });
+});
+
+describe('sanitizeHistoryForLLM', () => {
+  it('drops pending messages, duplicate assistant answers, and trailing unanswered users', () => {
+    const repeatedAnswer = 'Même réponse assistant répétée dans le contexte. '.repeat(4);
+    const msgs: ChatMessage[] = [
+      { id: 'u1', role: 'user', content: 'Question 1', sequence_number: 1 },
+      { id: 'a1', role: 'assistant', content: repeatedAnswer, sequence_number: 2 },
+      { id: 'u2', role: 'user', content: 'Question 2', sequence_number: 3 },
+      { id: 'a2', role: 'assistant', content: repeatedAnswer, sequence_number: 4 },
+      { id: 'pending-a3', role: 'assistant', content: 'stream', isStreaming: true },
+      { id: 'u3', role: 'user', content: 'Question restée sans réponse', sequence_number: 5 }
+    ];
+
+    const out = sanitizeHistoryForLLM(msgs);
+
+    expect(out.map((m) => m.id)).toEqual(['u1', 'a1']);
+    expect(out[out.length - 1]?.role).toBe('assistant');
   });
 });
