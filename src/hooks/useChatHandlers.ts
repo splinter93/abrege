@@ -61,6 +61,8 @@ interface ChatHandlersOptions {
   onToolExecutionComplete?: (toolResults: ToolResult[]) => void;
   /** Retourne l'operation_id de la bulle assistant en cours — pour déduplication Realtime echo */
   getAssistantOperationId?: () => string | null;
+  /** Serveur persiste l'assistant (stream route) — skip persist client */
+  skipAssistantPersist?: boolean;
 }
 
 interface ChatHandlersReturn {
@@ -241,10 +243,16 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
       contentLength: finalContent.length
     });
     
-    const persistedMessage = await addMessage(messageToAdd, {
-      persist: true, 
-      updateExisting: true
-    });
+    let persistedMessage: ChatMessage | null = null;
+
+    if (options.skipAssistantPersist) {
+      logger.dev('[useChatHandlers] ⏭️ Persist assistant skipped (server-first)');
+    } else {
+      persistedMessage = await addMessage(messageToAdd, {
+        persist: true,
+        updateExisting: true
+      });
+    }
 
     // ✅ CRITIQUE: Passer la cleanedTimeline enrichie (pas l'originale)
     await options.onComplete?.(

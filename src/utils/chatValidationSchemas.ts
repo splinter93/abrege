@@ -63,7 +63,8 @@ export const streamTimelineItemSchema = z.union([
 export const streamTimelineSchema = z.object({
   items: z.array(streamTimelineItemSchema),
   startTime: z.number(),
-  endTime: z.number().optional()
+  endTime: z.number().optional(),
+  interrupted: z.boolean().optional()
 });
 
 /**

@@ -37,6 +37,9 @@ import {
   sanitizeHistoryForLLM
 } from '@/services/llm/context/ContextCompressor';
 import { resolveAgentSystemInstructionNotes } from '@/services/llm/AgentMentionResolver';
+import { streamLifecycleService } from '@/services/chat/StreamLifecycleService';
+import { StreamLoopController, handleClientDisconnect } from './streamLoopGuards';
+import { persistAssistantIfAllowed } from './StreamPersistCoordinator';
 
 // Force Node.js runtime for streaming
 export const runtime = 'nodejs';
@@ -821,6 +824,21 @@ export async function POST(request: NextRequest) {
           // UUID partagé serveur/client pour dédup add_message_atomic (persist serveur + client)
           const serverOperationId = randomUUID();
 
+          if (sessionId && requestUserOperationId) {
+            await streamLifecycleService.registerRun({
+              sessionId,
+              userId,
+              userOperationId: requestUserOperationId,
+              assistantOperationId: serverOperationId
+            });
+          }
+
+          const loopController = new StreamLoopController(
+            request,
+            serverOperationId,
+            () => handleClientDisconnect(serverOperationId, 'client_disconnect')
+          );
+
           // Envoyer un chunk de début avec info modèle (pour debug)
           const wasOverridden = overrideResult.model !== overrideResult.originalModel || overrideResult.reasons.length > 0;
           sendSSE({
@@ -871,6 +889,15 @@ export async function POST(request: NextRequest) {
           // Extrait dans helpers.ts
 
           while (roundCount < maxRounds) {
+            if (!(await loopController.shouldContinue())) {
+              logger.info(LogCategory.API, '[Stream Route] ⏹️ Stream stopped (cancel or client disconnect)', {
+                sessionId,
+                assistantOperationId: serverOperationId,
+                roundCount
+              });
+              break;
+            }
+
             roundCount++;
             logger.debug(LogCategory.API,`[Stream Route] 🔄 Round ${roundCount}/${maxRounds}`);
 
@@ -1810,8 +1837,8 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
             logger.debug(LogCategory.API,`[Stream Route] 🔄 Relance du LLM avec ${currentMessages.length} messages`);
           }
 
-          // Persistance serveur : survit au refresh / navigation / fermeture d'onglet (client peut se déconnecter avant done)
-          if (sessionId) {
+          // Persistance serveur : survit au refresh / navigation (guards lifecycle + conversation)
+          if (sessionId && (await loopController.shouldContinue())) {
             const finalAssistant = [...currentMessages]
               .reverse()
               .find((m): m is ChatMessage => m.role === 'assistant');
@@ -1820,86 +1847,24 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
               : '';
             if (textContent.trim()) {
               try {
-                const { data: ownedSession } = await supabase
-                  .from('chat_sessions')
-                  .select('id')
-                  .eq('id', sessionId)
-                  .eq('user_id', userId)
-                  .maybeSingle();
-
-                if (!ownedSession) {
-                  logger.warn(LogCategory.API, '[Stream Route] ⚠️ Server persist skipped: session missing or not owned', {
-                    sessionId
-                  });
-                } else {
-                  let canPersistAssistant = true;
-
-                  if (requestUserOperationId) {
-                    const { data: parentUserMessage } = await supabase
-                      .from('chat_messages')
-                      .select('id, sequence_number')
-                      .eq('session_id', sessionId)
-                      .eq('operation_id', requestUserOperationId)
-                      .eq('role', 'user')
-                      .maybeSingle();
-
-                    if (!parentUserMessage) {
-                      logger.warn(LogCategory.API, '[Stream Route] ⚠️ Server persist skipped: parent user message missing', {
-                        sessionId,
-                        userOperationId: requestUserOperationId,
-                        assistantOperationId: serverOperationId
-                      });
-                      canPersistAssistant = false;
-                    } else {
-                      const { data: latestUserMessage } = await supabase
-                        .from('chat_messages')
-                        .select('sequence_number, operation_id')
-                        .eq('session_id', sessionId)
-                        .eq('role', 'user')
-                        .order('sequence_number', { ascending: false })
-                        .limit(1)
-                        .maybeSingle();
-
-                      const parentSeq = parentUserMessage.sequence_number;
-                      const latestSeq = latestUserMessage?.sequence_number;
-
-                      if (
-                        typeof parentSeq === 'number' &&
-                        typeof latestSeq === 'number' &&
-                        parentSeq < latestSeq
-                      ) {
-                        logger.warn(LogCategory.API, '[Stream Route] ⚠️ Server persist skipped: stale stream (newer user turn exists)', {
-                          sessionId,
-                          userOperationId: requestUserOperationId,
-                          assistantOperationId: serverOperationId,
-                          parentSequence: parentSeq,
-                          latestUserSequence: latestSeq
-                        });
-                        canPersistAssistant = false;
-                      }
-                    }
-                  }
-
-                  if (canPersistAssistant) {
-                    const { historyManager } = await import('@/services/chat/HistoryManager');
-                    const reasoning =
-                      finalAssistant &&
-                      'reasoning' in finalAssistant &&
-                      typeof finalAssistant.reasoning === 'string'
-                        ? finalAssistant.reasoning
-                        : undefined;
-                    await historyManager.addMessage(sessionId, {
-                      role: 'assistant',
-                      content: textContent,
-                      ...(reasoning ? { reasoning } : {}),
-                      operation_id: serverOperationId
-                    });
-                  }
-                }
+                const reasoning =
+                  finalAssistant &&
+                  'reasoning' in finalAssistant &&
+                  typeof finalAssistant.reasoning === 'string'
+                    ? finalAssistant.reasoning
+                    : undefined;
+                await persistAssistantIfAllowed({
+                  sessionId,
+                  userId,
+                  userOperationId: requestUserOperationId,
+                  assistantOperationId: serverOperationId,
+                  textContent,
+                  reasoning
+                });
               } catch (persistErr) {
                 logger.error(
                   LogCategory.API,
-                  '[Stream Route] ⚠️ Server persist failed (client fallback)',
+                  '[Stream Route] ⚠️ Server persist failed',
                   { sessionId },
                   persistErr instanceof Error ? persistErr : undefined
                 );

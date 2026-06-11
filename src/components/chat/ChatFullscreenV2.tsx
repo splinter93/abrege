@@ -33,6 +33,14 @@ import { useSyncAgentWithSession } from '@/hooks/chat/useSyncAgentWithSession';
 import { useChatFullscreenUIState } from '@/hooks/chat/useChatFullscreenUIState';
 import { useChatFullscreenUIActions } from '@/hooks/chat/useChatFullscreenUIActions';
 import { useChatFullscreenEffects } from '@/hooks/chat/useChatFullscreenEffects';
+import {
+  cancelStreamOnServer,
+  clearActiveStream,
+  getActiveStream,
+  setActiveStream
+} from '@/hooks/chat/useStreamCancellation';
+import { tokenManager } from '@/utils/tokenManager';
+import { simpleLogger as logger } from '@/utils/logger';
 import { useAgents } from '@/hooks/useAgents';
 
 // 🎯 NOUVEAUX COMPOSANTS (Phase 3)
@@ -47,8 +55,6 @@ import ChatCanvaPane from './ChatCanvaPane';
 import ModelDebug, { type ModelDebugInfo } from './ModelDebug';
 import { useCanvaStore } from '@/store/useCanvaStore';
 import { useCanvaContextPayload } from '@/hooks/chat/useCanvaContextPayload';
-
-import { simpleLogger as logger } from '@/utils/logger';
 import { applyChatFontPreset } from '@/constants/chatFontPresets';
 import { stripMarkdownForTTS } from '@/utils/stripMarkdownForTTS';
 
@@ -180,6 +186,7 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
   const streamingState = useStreamingState();
   const pendingAssistantClientMessageIdRef = useRef<string | null>(null);
   const pendingAssistantOperationIdRef = useRef<string | null>(null);
+  const pendingUserOperationIdRef = useRef<string | null>(null);
   const pendingAssistantStartTimeRef = useRef<number>(0);
   const infiniteMessagesRef = useRef<ChatMessage[]>(infiniteMessages);
 
@@ -229,22 +236,23 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
   const clearPendingAssistantTracking = useCallback(() => {
     pendingAssistantClientMessageIdRef.current = null;
     pendingAssistantOperationIdRef.current = null;
+    pendingUserOperationIdRef.current = null;
     pendingAssistantStartTimeRef.current = 0;
+    clearActiveStream();
   }, []);
 
   const createPendingAssistantMessage = useCallback(() => {
     const clientMessageId = `assistant-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-    const operationId = crypto.randomUUID();
     const startedAt = Date.now();
 
     pendingAssistantClientMessageIdRef.current = clientMessageId;
-    pendingAssistantOperationIdRef.current = operationId;
+    // operation_id défini dans onStreamInit (UUID serveur) — évite cancel avec un id client faux
+    pendingAssistantOperationIdRef.current = null;
     pendingAssistantStartTimeRef.current = startedAt;
 
     upsertInfiniteMessage({
       id: `pending-${clientMessageId}`,
       clientMessageId,
-      operation_id: operationId, // ✅ Clé de dédup : permet à upsertMessage de matcher le Realtime echo
       role: 'assistant',
       content: '',
       timestamp: new Date(startedAt).toISOString(),
@@ -303,6 +311,7 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
   const { handleComplete, handleError, handleToolResult, handleToolExecutionComplete } = useChatHandlers({
     // TTS mode vocal : déclenché dans onStreamEnd (contenu depuis streamingContentRef), pas ici
     onMessageFinalContent: undefined,
+    skipAssistantPersist: !!currentSession?.id,
     getAssistantOperationId: () => pendingAssistantOperationIdRef.current,
     onComplete: async (
       fullContent,
@@ -440,6 +449,15 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
     },
     onStreamInit: (operationId) => {
       pendingAssistantOperationIdRef.current = operationId;
+      const sessionId = currentSession?.id;
+      const userOperationId = pendingUserOperationIdRef.current;
+      if (sessionId && userOperationId) {
+        setActiveStream({
+          sessionId,
+          userOperationId,
+          assistantOperationId: operationId
+        });
+      }
       const cmid = pendingAssistantClientMessageIdRef.current;
       if (cmid) {
         updateInfiniteMessageByClientId(cmid, (message) =>
@@ -517,7 +535,30 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
     requireAuth,
     replaceMessages,
     initialLoadLimit: INITIAL_MESSAGES_LIMIT,
+    onStreamUserOperationId: (operationId) => {
+      pendingUserOperationIdRef.current = operationId;
+    },
     onBeforeSend: async () => {
+      const sessionId = currentSession?.id;
+      const active = getActiveStream();
+      const assistantOpId = pendingAssistantOperationIdRef.current;
+
+      if (sessionId && (active || assistantOpId)) {
+        const tokenResult = await tokenManager.getValidToken();
+        if (tokenResult.isValid && tokenResult.token) {
+          await cancelStreamOnServer({
+            sessionId,
+            assistantOperationId: active?.assistantOperationId ?? assistantOpId!,
+            userOperationId:
+              active?.userOperationId ?? pendingUserOperationIdRef.current ?? undefined,
+            reason: 'superseded',
+            token: tokenResult.token
+          });
+        }
+      }
+
+      abortStream();
+
       const pendingAssistantClientMessageId = pendingAssistantClientMessageIdRef.current;
       if (pendingAssistantClientMessageId) {
         removeMessageByClientId(pendingAssistantClientMessageId);
@@ -525,34 +566,76 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
 
       clearPendingAssistantTracking();
       streamingState.reset();
-      
-      // ✅ Clear l'erreur quand un nouveau message est envoyé
+
       uiState.setStreamError(null);
-      
+
       logger.dev('[ChatFullscreenV2] ✅ Timeline reset, historique complet dans infiniteMessages');
     }
   });
-  
-  const handleStopGeneration = useCallback(() => {
+
+  const handleStopGeneration = useCallback(async () => {
     logger.dev('[ChatFullscreenV2] ⏹️ Stop generation requested');
 
-    // Hard-stop TTS: kills WebSocket, clears sentence queue, stops audio playback immediately.
-    // Also clear the text buffer so the async onStreamEnd callback won't push leftover text.
     if (isVocalModeRef.current) {
       ttsBufferRef.current = '';
       window.dispatchEvent(new CustomEvent('chat-vocal-tts-stop'));
     }
 
-    messageActions.abortGeneration();
-
     const partialContent = streamingState.streamingContentRef.current;
     const clientMessageId = pendingAssistantClientMessageIdRef.current;
+    const assistantOpId = pendingAssistantOperationIdRef.current;
+    const sessionId = currentSession?.id;
+    const userOperationId = pendingUserOperationIdRef.current;
+    const partialTimeline: StreamTimeline = {
+      items: [...streamingState.streamingTimelineRef.current],
+      startTime: pendingAssistantStartTimeRef.current || Date.now(),
+      endTime: Date.now(),
+      interrupted: true
+    };
+
+    messageActions.abortGeneration();
+
+    let serverMessage: ChatMessage | undefined;
+    if (sessionId && assistantOpId) {
+      const tokenResult = await tokenManager.getValidToken();
+      if (tokenResult.isValid && tokenResult.token) {
+        const cancelResult = await cancelStreamOnServer({
+          sessionId,
+          assistantOperationId: assistantOpId,
+          ...(userOperationId ? { userOperationId } : {}),
+          reason: 'user_stop',
+          ...(partialContent.trim()
+            ? {
+                partial: {
+                  content: partialContent,
+                  streamTimeline: partialTimeline
+                }
+              }
+            : {}),
+          token: tokenResult.token
+        });
+        serverMessage = cancelResult.message;
+      }
+    }
 
     if (clientMessageId) {
       if (partialContent.trim()) {
+        const base = serverMessage ?? {
+          id: `pending-${clientMessageId}`,
+          role: 'assistant' as const,
+          timestamp: new Date().toISOString()
+        };
         updateInfiniteMessageByClientId(clientMessageId, (msg) =>
           msg.role === 'assistant'
-            ? { ...msg, content: partialContent, isStreaming: false }
+            ? {
+                ...msg,
+                ...base,
+                clientMessageId,
+                content: partialContent,
+                stream_timeline: partialTimeline,
+                isStreaming: false,
+                ...(assistantOpId ? { operation_id: assistantOpId } : {})
+              }
             : msg
         );
       } else {
@@ -565,7 +648,9 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
     streamingState.reset();
     uiState.setStreamError(null);
   }, [
+    currentSession?.id,
     messageActions,
+    abortStream,
     streamingState,
     updateInfiniteMessageByClientId,
     removeMessageByClientId,

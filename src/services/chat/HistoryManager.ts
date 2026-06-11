@@ -124,6 +124,27 @@ export class HistoryManager {
   }
 
   /**
+   * Lookup by operation_id (idempotent cancel / dedup).
+   */
+  async getMessageByOperationId(
+    sessionId: string,
+    operationId: string
+  ): Promise<ChatMessage | null> {
+    const { data, error } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .eq('session_id', sessionId)
+      .eq('operation_id', operationId)
+      .maybeSingle();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return data as unknown as ChatMessage;
+  }
+
+  /**
    * ➕ Ajouter un message atomiquement
    * 
    * Utilise add_message_atomic() pour garantir:

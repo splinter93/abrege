@@ -48,6 +48,8 @@ export interface UseChatMessageActionsOptions {
   onEditingChange?: (editing: boolean) => void;
   requireAuth: () => boolean;
   onBeforeSend?: () => Promise<void>;
+  /** Called when a new user message gets its operation_id (links stream cancel to parent turn). */
+  onStreamUserOperationId?: (operationId: string) => void;
   replaceMessages: (messages: ChatMessage[]) => void;
   initialLoadLimit: number;
 }
@@ -105,6 +107,7 @@ export function useChatMessageActions(
     onEditingChange,
     requireAuth,
     onBeforeSend,
+    onStreamUserOperationId,
     replaceMessages,
     initialLoadLimit,
     infiniteMessages
@@ -278,6 +281,7 @@ export function useChatMessageActions(
           
           // ✅ NOUVEAU: Générer operation_id unique pour idempotence
           const operationId = `${crypto.randomUUID()}`;
+          onStreamUserOperationId?.(operationId);
 
           const filteredPrompts =
             prompts && prompts.length > 0 ? filterPromptsInMessage(textContent, prompts) : [];
@@ -458,6 +462,7 @@ export function useChatMessageActions(
     upsertInfiniteMessage,
     requireAuth,
     onBeforeSend,
+    onStreamUserOperationId,
     replaceMessages
   ]);
 

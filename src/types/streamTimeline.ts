@@ -81,6 +81,8 @@ export interface StreamTimeline {
   items: StreamTimelineItem[];
   startTime: number;
   endTime?: number;
+  /** true when the user stopped generation before completion */
+  interrupted?: boolean;
 }
 
 

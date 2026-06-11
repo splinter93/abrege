@@ -8,6 +8,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { getSupabaseClient } from '@/utils/supabaseClientSingleton';
 import type { ChatMessage } from '@/types/chat';
 import { simpleLogger as logger } from '@/utils/logger';
+import { isAssistantOperationCancelled } from '@/hooks/chat/useStreamCancellation';
 
 const MAX_RECONNECT_ATTEMPTS = 10;
 const CIRCUIT_BREAKER_COOLDOWN_MS = 5 * 60 * 1000;
@@ -151,7 +152,39 @@ export function useChatMessagesRealtime(
           return;
         }
 
-        // Stream zombie : une réponse assistant arrive alors qu'un tour user plus récent existe déjà.
+        // Stream annulé côté serveur (stop / superseded) — ignorer zombie full persist.
+        if (
+          mapped.role === 'assistant' &&
+          incomingOp &&
+          isAssistantOperationCancelled(incomingOp)
+        ) {
+          logger.warn('[ChatMessagesRealtime] ⏭️ INSERT assistant ignoré — stream run cancelled', {
+            sessionId,
+            messageId: mapped.id,
+            operationId: incomingOp
+          });
+          return;
+        }
+
+        const timeline =
+          mapped.role === 'assistant'
+            ? mapped.stream_timeline ?? mapped.streamTimeline
+            : undefined;
+        if (
+          mapped.role === 'assistant' &&
+          incomingOp &&
+          timeline?.interrupted &&
+          !localMessages.some((message) => message.operation_id === incomingOp)
+        ) {
+          logger.dev('[ChatMessagesRealtime] ⏭️ INSERT assistant ignoré — partial interrupted déjà géré', {
+            sessionId,
+            messageId: mapped.id,
+            operationId: incomingOp
+          });
+          return;
+        }
+
+        // Fallback cross-tab : zombie full persist quand le tour user a déjà avancé
         if (mapped.role === 'assistant' && typeof mapped.sequence_number === 'number') {
           const latestUserSeq = localMessages.reduce((max, message) => {
             if (message.role !== 'user') return max;
@@ -177,7 +210,7 @@ export function useChatMessagesRealtime(
               incomingSequence: mapped.sequence_number,
               latestUserSeq,
               latestAssistantSeq,
-              operationId: incomingOp,
+              operationId: incomingOp
             });
             return;
           }
