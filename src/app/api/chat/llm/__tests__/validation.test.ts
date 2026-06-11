@@ -249,6 +249,39 @@ describe('validation schemas', () => {
       const result = llmStreamRequestSchema.safeParse(validPayload);
       expect(result.success).toBe(true);
     });
+
+    it('devrait accepter les messages legacy avec operation_id null en historique', () => {
+      const validPayload = {
+        message: 'Hello',
+        context: { sessionId: '123e4567-e89b-12d3-a456-426614174000' },
+        history: [
+          {
+            id: 'legacy-user-1',
+            role: 'user' as const,
+            content: 'Ancien message',
+            timestamp: '2025-06-01T10:00:00.000Z',
+            sequence_number: 1,
+            operation_id: null,
+            clientMessageId: null,
+            isStreaming: null
+          },
+          {
+            id: 'legacy-assistant-1',
+            role: 'assistant' as const,
+            content: 'Réponse legacy',
+            timestamp: 1717236000000,
+            operation_id: null
+          }
+        ]
+      };
+
+      const result = llmStreamRequestSchema.safeParse(validPayload);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.history[0].operation_id).toBeUndefined();
+        expect(result.data.history[1].timestamp).toBe('1717236000000');
+      }
+    });
   });
 });
 
