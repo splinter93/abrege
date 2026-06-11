@@ -5,7 +5,8 @@ import {
   compressToolResults,
   INTERNAL_TOOL_COMPRESSED_MARKER,
   sanitizeHistoryForLLM,
-  truncateHistory
+  truncateHistory,
+  truncateRecentHistory
 } from '../ContextCompressor';
 
 function user(content: string): ChatMessage {
@@ -85,6 +86,19 @@ describe('truncateHistory', () => {
     ];
     const out = truncateHistory(msgs, 40);
     expect(out.length).toBe(40);
+    expect(out.some((m) => m.role === 'system')).toBe(false);
+  });
+});
+
+describe('truncateRecentHistory', () => {
+  it('keeps only the most recent messages without head injection', () => {
+    const msgs: ChatMessage[] = Array.from({ length: 50 }, (_, i) =>
+      user(`msg-${i}`)
+    );
+    const out = truncateRecentHistory(msgs, 40);
+    expect(out.length).toBe(40);
+    expect(out[0].content).toBe('msg-10');
+    expect(out[39].content).toBe('msg-49');
     expect(out.some((m) => m.role === 'system')).toBe(false);
   });
 });

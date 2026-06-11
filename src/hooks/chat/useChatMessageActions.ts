@@ -27,6 +27,7 @@ import { simpleLogger as logger } from '@/utils/logger';
 import { tokenManager } from '@/utils/tokenManager';
 import { filterPromptsInMessage } from '@/utils/promptPlaceholders';
 import { chatOperationLock, OperationTimeoutError } from '@/services/chat/ChatOperationLock';
+import { getMaxHistoryMessages } from '@/utils/chatHistoryPreference';
 
   /**
    * Options du hook
@@ -317,6 +318,27 @@ export function useChatMessageActions(
             operationId
           });
 
+      // Historique LLM : source de vérité DB (N derniers), fusionné avec l'état local optimiste
+      const maxHistoryForLLM = getMaxHistoryMessages();
+      let historyForLLM = currentMessagesSnapshot;
+      try {
+        const dbRecent = await fetchRecentMessages(currentSession.id, maxHistoryForLLM);
+        historyForLLM = sortMessagesChronologically(
+          mergeMessagesByIdentity(dbRecent, currentMessagesSnapshot)
+        );
+        logger.dev('[useChatMessageActions] 📋 Historique LLM rechargé depuis DB', {
+          dbCount: dbRecent.length,
+          localCount: currentMessagesSnapshot.length,
+          mergedCount: historyForLLM.length,
+          maxHistoryForLLM
+        });
+      } catch (historyErr) {
+        logger.warn('[useChatMessageActions] ⚠️ Fallback historique local (reload DB échoué)', {
+          error: historyErr instanceof Error ? historyErr.message : String(historyErr),
+          localCount: currentMessagesSnapshot.length
+        });
+      }
+
       // 1. Préparer l'envoi via service (charge notes en arrière-plan)
       const prepareResult = await chatMessageSendingService.prepare({
         message,
@@ -329,7 +351,8 @@ export function useChatMessageActions(
         sessionId: currentSession.id,
         currentSession,
         selectedAgent,
-        infiniteMessages: currentMessagesSnapshot,
+        infiniteMessages: historyForLLM,
+        maxHistoryForLLM,
         llmContext
       });
 
@@ -463,7 +486,10 @@ export function useChatMessageActions(
     requireAuth,
     onBeforeSend,
     onStreamUserOperationId,
-    replaceMessages
+    replaceMessages,
+    fetchRecentMessages,
+    mergeMessagesByIdentity,
+    sortMessagesChronologically
   ]);
 
   /**

@@ -264,7 +264,23 @@ export function compressToolResults(
 }
 
 /**
+ * Tronque l'historique chat en gardant uniquement les N derniers messages (ordre chronologique).
+ * À préférer à {@link truncateHistory} pour le chat : évite de réinjecter les 3 premiers
+ * messages de la conversation, source de confusion quand l'utilisateur demande « mes derniers messages ».
+ */
+export function truncateRecentHistory(
+  messages: ChatMessage[],
+  maxMessages: number = MAX_HISTORY_MESSAGES
+): ChatMessage[] {
+  if (messages.length <= maxMessages) {
+    return messages.slice();
+  }
+  return trimLeadingInvalidToolSequence(messages.slice(-maxMessages));
+}
+
+/**
  * Tronque l'historique entrant : conserve le début (contexte) et la fin (récent), avec un marqueur system.
+ * Réservé aux cas où le début de conversation doit être préservé (hors chat standard).
  */
 export function truncateHistory(
   messages: ChatMessage[],

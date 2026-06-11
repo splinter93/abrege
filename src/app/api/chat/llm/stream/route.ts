@@ -32,7 +32,7 @@ import {
   compressToolResults,
   MAX_HISTORY_MESSAGES,
   TOOL_RESULT_THRESHOLD,
-  truncateHistory,
+  truncateRecentHistory,
   sanitizeToolSequences,
   sanitizeHistoryForLLM
 } from '@/services/llm/context/ContextCompressor';
@@ -403,7 +403,7 @@ export async function POST(request: NextRequest) {
     // ✅ Construire le tableau de messages avec contextes injectés AVANT user message
     // Conversion type-safe via mapper
     const sanitizedHistory = sanitizeToolSequences(
-      truncateHistory(
+      truncateRecentHistory(
         sanitizeHistoryForLLM(history.map((msg, index) => ({
           ...msg,
           id: msg.id ?? `history-${index}`,
