@@ -246,7 +246,12 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
     let persistedMessage: ChatMessage | null = null;
 
     if (options.skipAssistantPersist) {
-      logger.dev('[useChatHandlers] ⏭️ Persist assistant skipped (server-first)');
+      // Serveur-first ; fallback idempotent (operation_id) si persist serveur a échoué ou est en retard
+      logger.dev('[useChatHandlers] 💾 Persist assistant idempotent (server-first + fallback client)');
+      persistedMessage = await addMessage(messageToAdd, {
+        persist: true,
+        updateExisting: true
+      });
     } else {
       persistedMessage = await addMessage(messageToAdd, {
         persist: true,

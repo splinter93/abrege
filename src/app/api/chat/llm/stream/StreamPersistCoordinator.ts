@@ -35,12 +35,31 @@ export async function persistAssistantIfAllowed(
     return { persisted: false, skipReason: 'empty_content' };
   }
 
-  const guard = await streamLifecycleService.assertCanPersistAssistant({
+  let guard = await streamLifecycleService.assertCanPersistAssistant({
     sessionId,
     userId,
     userOperationId,
     assistantOperationId
   });
+
+  // Course rare client/serveur : le message user peut arriver en DB quelques ms après le stream
+  if (!guard.allowed && guard.reason === 'parent_user_missing' && userOperationId) {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      guard = await streamLifecycleService.assertCanPersistAssistant({
+        sessionId,
+        userId,
+        userOperationId,
+        assistantOperationId
+      });
+      if (guard.allowed) {
+        break;
+      }
+      if (guard.reason !== 'parent_user_missing') {
+        break;
+      }
+    }
+  }
 
   if (!guard.allowed) {
     logger.warn(LogCategory.API, '[StreamPersistCoordinator] persist skipped', {

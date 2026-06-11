@@ -367,71 +367,64 @@ export function useChatMessageActions(
         hasNotes: notes && notes.length > 0
       });
 
-      // 2. Sauvegarder en background (non-bloquant)
+      // 2. Persister le message user AVANT le stream (garde serveur parent_user + refresh)
       const messageToSave = {
         role: 'user' as const,
         content: tempMessage.content,
         timestamp: tempMessage.timestamp,
-        operation_id: operationId, // ✅ NOUVEAU: Inclure pour déduplication
+        operation_id: operationId,
         ...(tempMessage.attachedImages && { attachedImages: tempMessage.attachedImages }),
         ...(tempMessage.attachedNotes && { attachedNotes: tempMessage.attachedNotes }),
         ...(mentions && mentions.length > 0 && { mentions }),
         ...(filteredPrompts.length > 0 && { prompts: filteredPrompts }),
-        ...(canvasSelections && canvasSelections.length > 0 && { canvasSelections }) // ✅ NOUVEAU : Sélections du canvas
+        ...(canvasSelections && canvasSelections.length > 0 && { canvasSelections })
       };
 
-      sessionSyncService.addMessageAndSync(currentSession.id, messageToSave)
-        .then(saved => {
-          if (saved.success) {
-            logger.dev('[useChatMessageActions] ✅ Message user sauvegardé:', {
-              sequenceNumber: saved.message?.sequence_number
-            });
-            
-            if (saved.message) {
-              const {
-                attached_images,
-                attached_notes,
-                ...rest
-              } = saved.message as ChatMessage & {
-                attached_images?: UserMessage['attachedImages'];
-                attached_notes?: UserMessage['attachedNotes'];
-              };
+      const saved = await sessionSyncService.addMessageAndSync(currentSession.id, messageToSave);
+      if (!saved.success) {
+        throw new Error(saved.error || 'Échec sauvegarde message user');
+      }
 
-              const savedMessage: ChatMessage = {
-                ...rest,
-                clientMessageId,
-                ...(attached_images ? { attachedImages: attached_images } : {}),
-                ...(attached_notes ? { attachedNotes: attached_notes } : {})
-              };
+      logger.dev('[useChatMessageActions] ✅ Message user sauvegardé:', {
+        sequenceNumber: saved.message?.sequence_number
+      });
 
-              // Remplacer le message optimiste (temp-*) par la version DB via upsert ciblé.
-              // N'écrase PAS les autres messages (streaming bubble, etc.) contrairement à replaceMessages.
-              upsertInfiniteMessage(savedMessage);
-              messagesRef.current = messagesRef.current.map(msg =>
-                msg.id === tempMessage.id ? savedMessage : msg
-              );
-            }
+      if (saved.message) {
+        const {
+          attached_images,
+          attached_notes,
+          ...rest
+        } = saved.message as ChatMessage & {
+          attached_images?: UserMessage['attachedImages'];
+          attached_notes?: UserMessage['attachedNotes'];
+        };
 
-            // 🔥 Si 1er message → update optimiste is_empty dans le store
-            if (saved.message?.sequence_number === 1) {
-              const store = useChatStore.getState();
-              const updatedSessions = store.sessions.map(s => 
-                s.id === currentSession.id ? { ...s, is_empty: false } : s
-              );
-              store.setSessions(updatedSessions);
-              
-              // Update aussi currentSession
-              if (store.currentSession?.id === currentSession.id) {
-                store.setCurrentSession({ ...store.currentSession, is_empty: false });
-              }
-              
-              logger.dev('[useChatMessageActions] ✅ Conversation marquée non-vide (apparaît sidebar)');
-            }
-          }
-        })
-        .catch(err => {
-          logger.error('[useChatMessageActions] ❌ Erreur sauvegarde message user:', err);
-        });
+        const savedMessage: ChatMessage = {
+          ...rest,
+          clientMessageId,
+          ...(attached_images ? { attachedImages: attached_images } : {}),
+          ...(attached_notes ? { attachedNotes: attached_notes } : {})
+        };
+
+        upsertInfiniteMessage(savedMessage);
+        messagesRef.current = messagesRef.current.map((msg) =>
+          msg.id === tempMessage.id ? savedMessage : msg
+        );
+      }
+
+      if (saved.message?.sequence_number === 1) {
+        const store = useChatStore.getState();
+        const updatedSessions = store.sessions.map((s) =>
+          s.id === currentSession.id ? { ...s, is_empty: false } : s
+        );
+        store.setSessions(updatedSessions);
+
+        if (store.currentSession?.id === currentSession.id) {
+          store.setCurrentSession({ ...store.currentSession, is_empty: false });
+        }
+
+        logger.dev('[useChatMessageActions] ✅ Conversation marquée non-vide (apparaît sidebar)');
+      }
 
       // 3. Appel LLM (notes chargées et injectées dans contexte)
       if (!token || !context || !limitedHistory) {
