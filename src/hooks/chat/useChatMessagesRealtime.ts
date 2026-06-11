@@ -150,6 +150,38 @@ export function useChatMessagesRealtime(
           });
           return;
         }
+
+        // Stream zombie : une réponse assistant arrive alors qu'un tour user plus récent existe déjà.
+        if (mapped.role === 'assistant' && typeof mapped.sequence_number === 'number') {
+          const latestUserSeq = localMessages.reduce((max, message) => {
+            if (message.role !== 'user') return max;
+            const seq = typeof message.sequence_number === 'number' ? message.sequence_number : 0;
+            return Math.max(max, seq);
+          }, 0);
+          const latestAssistantSeq = localMessages.reduce((max, message) => {
+            if (message.role !== 'assistant') return max;
+            const seq = typeof message.sequence_number === 'number' ? message.sequence_number : 0;
+            return Math.max(max, seq);
+          }, 0);
+
+          if (
+            latestUserSeq > 0 &&
+            latestAssistantSeq >= latestUserSeq &&
+            mapped.sequence_number > latestAssistantSeq &&
+            incomingOp &&
+            !localMessages.some((message) => message.operation_id === incomingOp)
+          ) {
+            logger.warn('[ChatMessagesRealtime] ⏭️ INSERT assistant ignoré — tour conversationnel déjà avancé', {
+              sessionId,
+              messageId: mapped.id,
+              incomingSequence: mapped.sequence_number,
+              latestUserSeq,
+              latestAssistantSeq,
+              operationId: incomingOp,
+            });
+            return;
+          }
+        }
       }
 
       upsertRef.current(mapped);

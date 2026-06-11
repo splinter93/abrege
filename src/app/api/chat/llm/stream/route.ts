@@ -1850,6 +1850,33 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                         assistantOperationId: serverOperationId
                       });
                       canPersistAssistant = false;
+                    } else {
+                      const { data: latestUserMessage } = await supabase
+                        .from('chat_messages')
+                        .select('sequence_number, operation_id')
+                        .eq('session_id', sessionId)
+                        .eq('role', 'user')
+                        .order('sequence_number', { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
+
+                      const parentSeq = parentUserMessage.sequence_number;
+                      const latestSeq = latestUserMessage?.sequence_number;
+
+                      if (
+                        typeof parentSeq === 'number' &&
+                        typeof latestSeq === 'number' &&
+                        parentSeq < latestSeq
+                      ) {
+                        logger.warn(LogCategory.API, '[Stream Route] ⚠️ Server persist skipped: stale stream (newer user turn exists)', {
+                          sessionId,
+                          userOperationId: requestUserOperationId,
+                          assistantOperationId: serverOperationId,
+                          parentSequence: parentSeq,
+                          latestUserSequence: latestSeq
+                        });
+                        canPersistAssistant = false;
+                      }
                     }
                   }
 
