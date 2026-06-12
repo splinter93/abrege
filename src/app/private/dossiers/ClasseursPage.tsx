@@ -165,6 +165,20 @@ export default function ClasseursPage() {
                 p.closeContextMenus();
               },
             },
+            ...(p.contextMenuItem.item.type === "file"
+              ? [
+                  {
+                    label: "Copier le slug",
+                    onClick: () => {
+                      const slug = p.contextMenuItem!.item.slug?.trim();
+                      if (slug) {
+                        void navigator.clipboard.writeText(slug);
+                      }
+                      p.closeContextMenus();
+                    },
+                  } as const,
+                ]
+              : []),
             ...(p.sharedReadOnly
               ? []
               : [

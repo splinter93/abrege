@@ -30,7 +30,7 @@
       "get": {
         "operationId": "getNote",
         "summary": "Récupérer une note ou une section",
-        "description": "Récupère une note par ID ou slug. **fields** : all | content | metadata. **section** : filtre sur une section par **slug** (idéalement le `slug` issu de **getNoteTOC**) ou titre — retourne `section` avec body, char_count, etc. Sans `section`, note complète. **Lire avant d’éditer** : pour connaître les slugs fiables, utiliser **getNoteTOC** ; le paramètre `section` ici doit correspondre à un slug valide pour éviter 404.",
+        "description": "Récupère une note par ID ou slug. **Note entière** : omettre `section` (ou `fields` seul, ex. `fields=content`) — ne pas envoyer `section=\"null\"` ni `section=\"undefined\"` (chaînes invalides). **Une section précise** : `section` = slug exact de **getNoteTOC** (ou titre) — retourne `note` (id, title, updated_at) + `section` (body, char_count, etc.). **fields** : all (défaut) | content | metadata — indépendant de `section` ; `fields=content` fonctionne sans `section` pour obtenir le markdown complet.",
         "tags": [
           "Notes"
         ],
@@ -71,7 +71,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Slug ou titre d'une section (voir table-of-contents). Si fourni, la réponse contient uniquement note (id, title, updated_at) et section (title, slug, level, heading_line, body, char_count). Si la section est introuvable : 404 avec available_sections."
+            "description": "Optionnel. **Omettre** pour la note entière (comportement par défaut). Fournir uniquement pour lire **une** section : slug exact de getNoteTOC ou titre. Ne pas envoyer la chaîne \"null\" / \"undefined\" / \"\" — l’API les ignore comme absence de filtre. Si slug invalide : 404 avec available_sections."
           }
         ],
         "responses": {

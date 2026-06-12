@@ -14,6 +14,18 @@ function createServiceClient() {
   return createClient(url, key);
 }
 
+/** Valeurs query `section` traitées comme « note entière » (agents envoient parfois "null" en chaîne). */
+const SECTION_ABSENT_LITERALS = new Set(['null', 'undefined']);
+
+function parseSectionQueryParam(raw: string | null): string | null {
+  if (raw === null) return null;
+  const trimmed = raw.trim();
+  if (!trimmed || SECTION_ABSENT_LITERALS.has(trimmed.toLowerCase())) {
+    return null;
+  }
+  return trimmed;
+}
+
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -55,7 +67,7 @@ export async function GET(
   // Récupérer le paramètre fields pour déterminer ce qui doit être retourné
   const { searchParams } = new URL(request.url);
   const fields = searchParams.get('fields') || 'all'; // all, content, metadata
-  const sectionSlug = searchParams.get('section') || null; // slug ou titre de section
+  const sectionSlug = parseSectionQueryParam(searchParams.get('section'));
 
   // Si section demandée, on a besoin de markdown_content dans tous les cas
   const effectiveFields = sectionSlug ? 'content' : fields;
